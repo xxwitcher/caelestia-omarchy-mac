@@ -81,8 +81,8 @@ Item {
             }
         }
 
-        Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
-        Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
+        Keys.onUpPressed: list.showGrid ? list.currentList?.moveCurrentIndexUp() : list.currentList?.decrementCurrentIndex()
+        Keys.onDownPressed: list.showGrid ? list.currentList?.moveCurrentIndexDown() : list.currentList?.incrementCurrentIndex()
 
         Keys.onEscapePressed: root.screenState.launcher = false
 

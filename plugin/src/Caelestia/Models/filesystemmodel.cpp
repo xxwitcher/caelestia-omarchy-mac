@@ -231,7 +231,7 @@ void FileSystemModel::watchDirIfRecursive(const QString& path) {
                 filters |= QDir::Hidden;
             }
 
-            QDirIterator iter(path, filters, QDirIterator::Subdirectories);
+            QDirIterator iter(path, filters, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
             QStringList dirs;
             while (iter.hasNext()) {
                 dirs << iter.next();
@@ -301,7 +301,8 @@ void FileSystemModel::updateEntriesForDir(const QString& dir) {
     }
 
     auto future = QtConcurrent::run([=](QPromise<PathDiff>& promise) {
-        const auto flags = recursive ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags;
+        // Follow symlinks so linked folders (e.g. Omarchy theme backgrounds in the wallpaper dir) are scanned
+        const auto flags = recursive ? QDirIterator::Subdirectories | QDirIterator::FollowSymlinks : QDirIterator::NoIteratorFlags;
         const auto newPaths = scanDir(dir, filtersFor(filter, nameFilters, showHidden), flags, promise);
         if (!newPaths)
             return;

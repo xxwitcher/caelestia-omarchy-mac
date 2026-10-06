@@ -1,0 +1,88 @@
+# Caelestia shell for omarchy-mac (Apple Silicon), built from the xxwitcher/caelestia-omarchy-mac fork.
+# Based on the AUR caelestia-shell-git PKGBUILD. Runs on quickshell-caelestia instead of quickshell-git,
+# so Omarchy's own quickshell stays installed.
+#
+# Set CAELESTIA_SRC=/path/to/checkout to build from a local working tree instead of the git remote.
+
+_pkgname='caelestia-shell'
+pkgname=caelestia-omarchy-mac
+pkgver=2.5.0.r13.g6f7ce62
+pkgrel=1
+pkgdesc='The Caelestia desktop shell, packaged for omarchy-mac'
+arch=('x86_64' 'aarch64')
+url='https://github.com/xxwitcher/caelestia-omarchy-mac'
+license=('GPL-3.0-only')
+depends=(
+    'caelestia-cli'
+    'quickshell-caelestia'
+    'glibc'
+    'gcc-libs'
+
+    # Brightness
+    'ddcutil'
+    'brightnessctl'
+
+    # Services
+    'libcava'
+    'networkmanager'
+    'lm_sensors'
+    'aubio'
+    'libpipewire'
+    'libqalculate'
+    'power-profiles-daemon'
+
+    # Fonts
+    'ttf-material-symbols-variable'
+    'ttf-rubik-vf'
+    'ttf-cascadia-code-nerd'
+
+    # Icons (the shell resolves app icons through the GTK icon theme)
+    'papirus-icon-theme'
+
+    # Qt modules
+    'qt6-base'
+    'qt6-declarative'
+    'qt6-imageformats'
+    'qt6-m3shapes-git'
+
+    # omarchy-mac additions: agent terminal tab, fan control
+    'qmltermwidget'
+    'python'
+
+    # Extra functionality
+    'swappy'
+    'fish'
+    'bash'
+)
+optdepends=(
+    'fprintd: fingerprint unlock for the lock screen'
+)
+makedepends=('git' 'cmake' 'ninja' 'qt6-shadertools')
+provides=($_pkgname)
+conflicts=($_pkgname $_pkgname-git)
+if [[ -z $CAELESTIA_SRC ]]; then
+    source=("$pkgname::git+$url.git")
+    sha256sums=('SKIP')
+fi
+
+_srcdir() {
+    echo "${CAELESTIA_SRC:-$srcdir/$pkgname}"
+}
+
+pkgver() {
+    cd "$(_srcdir)"
+    git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+build() {
+    cmake -S "$(_srcdir)" -B "$srcdir/build" -G Ninja \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DCMAKE_INSTALL_PREFIX=/ \
+        -DDISTRIBUTOR="caelestia-omarchy-mac (package: $pkgname)"
+    cmake --build "$srcdir/build"
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+    install -Dm644 "$(_srcdir)/LICENSE" "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

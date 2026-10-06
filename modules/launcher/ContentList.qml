@@ -20,8 +20,9 @@ Item {
     required property int rounding
 
     readonly property bool showWallpapers: search.text.startsWith(`${GlobalConfig.launcher.actionPrefix}wallpaper `)
-    readonly property var currentList: showWallpapers ? wallpaperList.item : appList.item // Can be either ListView or PathView, so can't type properly
-    property string animState: showWallpapers ? "wallpapers" : "apps"
+    readonly property bool showGrid: !showWallpapers && !search.text.startsWith(GlobalConfig.launcher.actionPrefix)
+    readonly property var currentList: showWallpapers ? wallpaperList.item : showGrid ? appGrid.item : appList.item // ListView, GridView or PathView, so can't type properly
+    property string animState: showWallpapers ? "wallpapers" : showGrid ? "grid" : "apps"
 
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
@@ -39,6 +40,18 @@ Item {
                 appList.active: true
             }
 
+            AnchorChanges {
+                anchors.left: root.parent.left
+                anchors.right: root.parent.right
+            }
+        },
+        State {
+            name: "grid"
+            PropertyChanges {
+                root.implicitWidth: root.Tokens.sizes.launcher.itemWidth
+                root.implicitHeight: Math.min(root.maxHeight, appGrid.implicitHeight > 0 ? appGrid.implicitHeight : empty.implicitHeight)
+                appGrid.active: true
+            }
             AnchorChanges {
                 anchors.left: root.parent.left
                 anchors.right: root.parent.right
@@ -85,6 +98,19 @@ Item {
         sourceComponent: AppList {
             objectName: "launcherAppList"
 
+            search: root.search
+            screenState: root.screenState
+        }
+    }
+
+    Loader {
+        id: appGrid
+
+        active: false
+        anchors.fill: parent
+
+        sourceComponent: AppGrid {
+            objectName: "launcherAppGrid"
             search: root.search
             screenState: root.screenState
         }

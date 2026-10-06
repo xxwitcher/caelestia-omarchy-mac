@@ -151,7 +151,7 @@ Column {
 
         anchors.horizontalCenter: parent.horizontalCenter
 
-        implicitWidth: saver.implicitHeight + balance.implicitHeight + perf.implicitHeight + Tokens.padding.medium * 2 + Tokens.spacing.largeIncreased * 2
+        implicitWidth: saver.implicitHeight + balance.implicitHeight + (perf.visible ? perf.implicitHeight + Tokens.spacing.largeIncreased : 0) + Tokens.padding.medium * 2 + Tokens.spacing.largeIncreased
         implicitHeight: Math.max(saver.implicitHeight, balance.implicitHeight, perf.implicitHeight) + Tokens.padding.small
 
         color: Colours.tPalette.m3surfaceContainer
@@ -207,7 +207,11 @@ Column {
         Profile {
             id: balance
 
-            anchors.centerIn: parent
+            // Devices without a performance profile (e.g. Apple Silicon) only get saver and balanced
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.horizontalCenter: perf.visible ? parent.horizontalCenter : undefined
+            anchors.right: perf.visible ? undefined : parent.right
+            anchors.rightMargin: Tokens.padding.extraSmall
 
             profile: PowerProfile.Balanced
             icon: "balance"
@@ -216,6 +220,7 @@ Column {
         Profile {
             id: perf
 
+            visible: PowerProfiles.hasPerformanceProfile
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
             anchors.rightMargin: Tokens.padding.extraSmall

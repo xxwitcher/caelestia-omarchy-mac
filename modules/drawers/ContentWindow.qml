@@ -68,7 +68,7 @@ StyledWindow {
     name: "drawers"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: (fsTransitionProg > 0 && contentItem.Config.general.showOverFullscreen) || (hasSpecialWorkspace && hasFullscreenOnNormalWs) ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: screenState.launcher || screenState.session ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: screenState.launcher || screenState.session || (screenState.dashboard && screenState.agentTabActive) ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     mask: hasFullscreen ? emptyRegion : regions
 
@@ -203,8 +203,8 @@ StyledWindow {
             panel: panels.sidebar
             deformAmount: 0.03
             implicitHeight: panel.height * (1 / rawDeformMatrix.m22) + 2
-            exclude: panels.sidebar.offsetScale > 0.08 ? [] : [utilsBg]
-            bottomLeftRadius: Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius
+            exclude: [utilsBg] // Separate panels: without this their blobs melt into a bridge
+            bottomLeftRadius: radius
         }
 
         PanelBg {
@@ -227,8 +227,8 @@ StyledWindow {
 
             panel: panels.utilities
             deformAmount: panels.sidebar.visible ? 0.1 : 0.15
-            exclude: panels.sidebar.offsetScale > 0.08 ? [] : [sidebarBg]
-            topLeftRadius: Math.max(0, Math.min(1, panels.sidebar.offsetScale / 0.3)) * radius
+            exclude: [sidebarBg]
+            topLeftRadius: radius
         }
 
         PanelBg {

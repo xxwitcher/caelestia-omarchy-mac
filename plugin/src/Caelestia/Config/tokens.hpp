@@ -107,7 +107,7 @@ class AppearanceTokens : public settings::ObjectNode {
 class BarTokens : public settings::ObjectNode {
     CONFIG_NODE(BarTokens, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, innerWidth, 40)
+    CONFIG_PROPERTY(int, innerWidth, 34)
     CONFIG_PROPERTY(int, windowPreviewSize, 400)
     CONFIG_PROPERTY(int, trayMenuWidth, 300)
     CONFIG_PROPERTY(int, batteryWidth, 250)
@@ -157,7 +157,7 @@ class LauncherTokens : public settings::ObjectNode {
 class NotifsTokens : public settings::ObjectNode {
     CONFIG_NODE(NotifsTokens, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, width, 430)
+    CONFIG_PROPERTY(int, width, 340)
     CONFIG_GLOBAL_PROPERTY(int, image, 42)
     CONFIG_PROPERTY(int, badge, 20)
 };
@@ -178,14 +178,14 @@ class SessionTokens : public settings::ObjectNode {
 class SidebarTokens : public settings::ObjectNode {
     CONFIG_NODE(SidebarTokens, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, width, 430)
+    CONFIG_PROPERTY(int, width, 340)
 };
 
 class UtilitiesTokens : public settings::ObjectNode {
     CONFIG_NODE(UtilitiesTokens, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, width, 430)
-    CONFIG_PROPERTY(int, toastWidth, 430)
+    CONFIG_PROPERTY(int, width, 340)
+    CONFIG_PROPERTY(int, toastWidth, 340)
 };
 
 class LockTokens : public settings::ObjectNode {

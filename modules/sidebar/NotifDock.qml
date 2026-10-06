@@ -19,6 +19,8 @@ Item {
     required property Props props
     required property ScreenState screenState
     readonly property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
+    // Height the dock wants: title, notifications (or the empty state) and the clear button
+    readonly property real naturalHeight: Tokens.padding.medium * 2 + title.implicitHeight + Tokens.spacing.medium + Math.max(notifList.implicitHeight, 160) + 64
 
     anchors.fill: parent
     anchors.margins: Tokens.padding.medium
@@ -100,6 +102,9 @@ Item {
                     source: Paths.absolutePath(Config.paths.noNotifsPic)
                     fillMode: Image.PreserveAspectFit
                     sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                    // Fits the shorter sidebar: never taller than the space left beside the text
+                    Layout.preferredWidth: clipRect.width * 0.6
+                    Layout.preferredHeight: Math.max(0, Math.min(clipRect.width * 0.45, clipRect.height - 80))
 
                     layer.enabled: true
                     layer.effect: Colouriser {

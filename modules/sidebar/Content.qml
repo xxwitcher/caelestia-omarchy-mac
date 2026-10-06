@@ -9,6 +9,7 @@ Item {
 
     required property Props props
     required property ScreenState screenState
+    readonly property real naturalHeight: dock.naturalHeight
 
     ColumnLayout {
         id: layout
@@ -24,6 +25,8 @@ Item {
             color: Colours.tPalette.m3surfaceContainerLow
 
             NotifDock {
+                id: dock
+
                 objectName: "sidebarNotifications"
 
                 props: root.props
@@ -31,12 +34,5 @@ Item {
             }
         }
 
-        StyledRect {
-            Layout.topMargin: Tokens.padding.large - layout.spacing
-            Layout.fillWidth: true
-            implicitHeight: 1
-
-            color: Colours.tPalette.m3outlineVariant
-        }
     }
 }

@@ -41,9 +41,22 @@ Item {
                 iconName: "cloud",
                 text: Tr.tr("Weather"),
                 enabled: Config.dashboard.showWeather
+            },
+            {
+                component: agentComponent,
+                iconName: "smart_toy",
+                text: Tr.tr("Agent"),
+                enabled: true,
+                agent: true
             }
         ];
         return allTabs.filter(tab => tab.enabled);
+    }
+
+    Binding {
+        target: root.screenState
+        property: "agentTabActive"
+        value: root.dashboardTabs[root.screenState.dashboardTab]?.agent ?? false
     }
 
     readonly property real nonAnimWidth: view.implicitWidth + viewWrapper.anchors.margins * 2
@@ -174,6 +187,12 @@ Item {
                 id: performanceComponent
 
                 Performance {}
+            }
+
+            Component {
+                id: agentComponent
+
+                AgentTab {}
             }
 
             Component {

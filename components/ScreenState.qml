@@ -14,5 +14,6 @@ PersistentProperties {
 
     // Dashboard state
     property int dashboardTab
+    property bool agentTabActive // Agent tab needs keyboard focus
     property date dashboardDate: new Date()
 }

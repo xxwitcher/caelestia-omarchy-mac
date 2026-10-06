@@ -40,6 +40,15 @@ QtObject {
             }
         },
 
+        Component {
+            // Window style
+            StackPage {
+                Component {
+                    WindowStylePage {}
+                }
+            }
+        },
+
         // Connectivity
         Component {
             // Network
@@ -95,10 +104,55 @@ QtObject {
 
         // System
         Component {
-            PlaceholderComp {}
+            // Updates
+            StackPage {
+                Component {
+                    UpdatesPage {}
+                }
+            }
         },
         Component {
             PlaceholderComp {}
+        },
+        Component {
+            // Displays
+            StackPage {
+                Component {
+                    DisplaysPage {}
+                }
+            }
+        },
+        Component {
+            // Power
+            StackPage {
+                Component {
+                    PowerPage {}
+                }
+            }
+        },
+        Component {
+            // Security
+            StackPage {
+                Component {
+                    SecurityPage {}
+                }
+            }
+        },
+        Component {
+            // Keyboard & trackpad
+            StackPage {
+                Component {
+                    KeyboardPage {}
+                }
+            }
+        },
+        Component {
+            // Hyprland
+            StackPage {
+                Component {
+                    HyprlandPage {}
+                }
+            }
         },
 
         // Shell
@@ -139,6 +193,14 @@ QtObject {
                 }
                 Component {
                     BarClock {}
+                }
+            }
+        },
+        Component {
+            // Dock
+            StackPage {
+                Component {
+                    DockPage {}
                 }
             }
         },

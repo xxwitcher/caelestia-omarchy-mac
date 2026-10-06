@@ -14,9 +14,13 @@ Item {
     readonly property bool shouldBeActive: screenState.sidebar && Config.sidebar.enabled
     property real offsetScale: shouldBeActive ? 0 : 1
 
+    // Open height (set by the drawers: as tall as the quick actions panel). Like the dashboard,
+    // the panel keeps its size and slides down from above the top edge (see Panels.qml).
+    property real fullHeight
+
     visible: offsetScale < 1
-    anchors.rightMargin: (-implicitWidth - 5) * offsetScale
     implicitWidth: Tokens.sizes.sidebar.width
+    implicitHeight: fullHeight
     opacity: 1 - offsetScale
 
     Behavior on offsetScale {
@@ -31,7 +35,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: Tokens.padding.large
         anchors.margins: CUtils.clamp(anchors.leftMargin - Config.border.thickness, 0, anchors.leftMargin)
-        anchors.bottomMargin: 0
+        anchors.bottomMargin: anchors.leftMargin // Same bezel as the sides (it no longer joins the quick actions)
 
         active: root.shouldBeActive || root.visible
 

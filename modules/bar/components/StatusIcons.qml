@@ -37,6 +37,8 @@ StyledRect {
     function collapsed(entry: var): bool {
         if (entry.id === "lockStatus")
             return !Hypr.capsLock && !Hypr.numLock;
+        if (entry.id === "fans")
+            return !Fans.present;
         return false;
     }
 
@@ -122,6 +124,17 @@ StyledRect {
                         MaterialIcon {
                             animate: true
                             text: Nmcli.activeEthernet ? "cable" : Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
+                            color: root.colour
+                        }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "fans"
+                    delegate: EntryWrapper {
+                        visible: Fans.present // Layouts skip invisible items, so non-Macs get no gap
+                        MaterialIcon {
+                            animate: true
+                            text: Object.values(Fans.rpms).some(r => r > 0) ? "mode_fan" : "mode_fan_off"
                             color: root.colour
                         }
                     }

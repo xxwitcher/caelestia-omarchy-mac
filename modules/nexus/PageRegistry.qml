@@ -14,6 +14,12 @@ QtObject {
             description: Tr.tr("Wallpaper, fonts, colours"),
             category: "appearance"
         },
+        {
+            label: Tr.tr("Window style"),
+            icon: "border_style",
+            description: Tr.tr("Gradient border, workspace animation, swipes"),
+            category: "appearance"
+        },
 
         // Connectivity
         // TODO
@@ -56,12 +62,48 @@ QtObject {
             description: Tr.tr("Manage plugins"),
             category: "system"
         },
+        {
+            label: Tr.tr("Displays"),
+            icon: "monitor",
+            description: Tr.tr("Scale, resolution, arrangement"),
+            category: "system"
+        },
+        {
+            label: Tr.tr("Power"),
+            icon: "battery_charging_full",
+            description: Tr.tr("Power profile, idle, sleep, battery"),
+            category: "system"
+        },
+        {
+            label: Tr.tr("Security"),
+            icon: "lock",
+            description: Tr.tr("Lock screen, fingerprint, password"),
+            category: "system"
+        },
+        {
+            label: Tr.tr("Keyboard & trackpad"),
+            icon: "keyboard",
+            description: Tr.tr("Layout, repeat, Ctrl/Super swap, Caps Lock, scrolling, tapping"),
+            category: "system"
+        },
+        {
+            label: Tr.tr("Hyprland"),
+            icon: "tune",
+            description: Tr.tr("Every compositor option: gaps, borders, input, gestures"),
+            category: "system"
+        },
 
         // Shell
         {
             label: Tr.tr("Panels"),
             icon: "dock_to_bottom",
             description: Tr.tr("Dashboard, taskbar, launcher, sidebar"),
+            category: "shell"
+        },
+        {
+            label: Tr.tr("Dock"),
+            icon: "dock_to_left",
+            description: Tr.tr("Pinned apps, show or hide"),
             category: "shell"
         },
         {

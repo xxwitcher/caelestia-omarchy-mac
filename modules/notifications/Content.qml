@@ -20,6 +20,10 @@ Item {
     required property Item utilitiesPanel
     readonly property int padding: Tokens.padding.large
     readonly property int clampedPadding: CUtils.clamp(padding - Config.border.thickness, 0, padding)
+    // Bumped whenever a delegate's height changes. Bindings that read heights through itemAtIndex()
+    // can't track them (the call isn't notifiable, and the delegate may not exist yet on first
+    // evaluation), so a lone notification would never resize when expanded.
+    property int heightRevision
 
     anchors.top: parent.top
     anchors.bottom: parent.bottom
@@ -27,6 +31,7 @@ Item {
 
     implicitWidth: Tokens.sizes.notifs.width
     implicitHeight: {
+        heightRevision;
         const count = list.count;
         if (count === 0)
             return 0;
@@ -95,6 +100,7 @@ Item {
             ExtraIndicator {
                 anchors.top: parent.top
                 extra: {
+                    root.heightRevision;
                     const count = list.count;
                     if (count === 0)
                         return 0;
@@ -116,6 +122,7 @@ Item {
             ExtraIndicator {
                 anchors.bottom: parent.bottom
                 extra: {
+                    root.heightRevision;
                     const count = list.count;
                     if (count === 0)
                         return 0;
@@ -147,6 +154,9 @@ Item {
         required property int index
         readonly property alias nonAnimHeight: notif.nonAnimHeight
         property int idx
+
+        onNonAnimHeightChanged: root.heightRevision++
+        Component.onCompleted: root.heightRevision++
 
         onIndexChanged: {
             if (index !== -1)

@@ -32,14 +32,14 @@ class BarPopouts : public settings::ObjectNode {
 class BarWorkspaces : public settings::ObjectNode {
     CONFIG_NODE(BarWorkspaces, settings::ObjectNode)
 
-    CONFIG_PROPERTY(int, shown, 5)
+    CONFIG_PROPERTY(int, shown, 4)
     CONFIG_PROPERTY(bool, activeIndicator, true)
     CONFIG_PROPERTY(bool, occupiedBg, false)
     CONFIG_PROPERTY(bool, showUnoccupied, true)
     CONFIG_PROPERTY(bool, perMonitor, true)
     CONFIG_PROPERTY(bool, showWindows, true)
     CONFIG_PROPERTY(bool, showWindowsOnSpecialWorkspaces, true)
-    CONFIG_PROPERTY(int, maxWindowIcons, 5)
+    CONFIG_PROPERTY(int, maxWindowIcons, 2)
     CONFIG_PROPERTY(bool, activeTrail, true)
     CONFIG_ENUM_PROPERTY(BarWorkspaceDisplay, displayType, BarWorkspaceDisplay::Shapes)
     CONFIG_ENUM_PROPERTY(BarWorkspaceDisplay, specialDisplayType, BarWorkspaceDisplay::Icons)
@@ -123,14 +123,17 @@ class BarConfig : public settings::ObjectNode {
             LIST_ENTRY(kbLayout, false),
             LIST_ENTRY(network, true),
             LIST_ENTRY(bluetooth, true),
+            LIST_ENTRY(fans, true),
             LIST_ENTRY(battery, true),
         }))
     CONFIG_LIST(EntryList, entries,
         DEFAULT_ARG({
             LIST_ENTRY(logo, true),
+            LIST_ENTRY(windowControls, true),
             LIST_ENTRY(workspaces, true),
             LIST_ENTRY(spacer, true),
-            LIST_ENTRY(activeWindow, true),
+            LIST_ENTRY(dock, true),
+            LIST_ENTRY(activeWindow, false),
             LIST_ENTRY(spacer, true),
             LIST_ENTRY(tray, true),
             LIST_ENTRY(clock, true),

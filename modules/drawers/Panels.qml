@@ -43,8 +43,8 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
-        anchors.rightMargin: sessionWrapper.anchors.rightMargin + session.width * (1 - session.offsetScale)
-        clip: sidebar.visible || session.visible
+        anchors.rightMargin: session.width * (1 - session.offsetScale)
+        clip: session.visible
 
         implicitWidth: osd.implicitWidth * (1 - osd.offsetScale)
         implicitHeight: osd.implicitHeight
@@ -54,7 +54,7 @@ Item {
 
             screen: root.screen
             screenState: root.screenState
-            sidebarOrSessionVisible: sidebar.visible || session.visible
+            sidebarOrSessionVisible: session.visible // The short sidebar never sits beside the OSD
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -79,8 +79,9 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
-        anchors.rightMargin: sidebar.width * (1 - sidebar.offsetScale)
-        clip: sidebar.visible
+        // The notification sidebar is short now (top only), so the OSD and session menu stay on
+        // the screen edge in the middle instead of moving out beside it
+        anchors.rightMargin: 0
 
         implicitWidth: session.implicitWidth * (1 - session.offsetScale)
         implicitHeight: session.implicitHeight
@@ -89,7 +90,7 @@ Item {
             id: session
 
             screenState: root.screenState
-            sidebarVisible: sidebar.visible
+            sidebarVisible: false // The short sidebar never sits beside the session menu
 
             anchors.verticalCenter: parent.verticalCenter
             anchors.right: parent.right
@@ -147,9 +148,10 @@ Item {
 
         screenState: root.screenState
 
+        // Drops down from the top, as tall as the quick actions panel
+        fullHeight: utilities.nonAnimHeight
         anchors.top: notifications.bottom
-        anchors.bottom: utilities.top
         anchors.right: parent.right
-        anchors.topMargin: -notifications.anchors.topMargin
+        anchors.topMargin: -notifications.anchors.topMargin - (implicitHeight + 5) * offsetScale
     }
 }

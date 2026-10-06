@@ -24,7 +24,7 @@ Item {
 
         reloadableId: "utilities"
     }
-    readonly property bool shouldBeActive: screenState.sidebar || (screenState.utilities && Config.utilities.enabled && !(screenState.session && Config.session.enabled))
+    readonly property bool shouldBeActive: (screenState.utilities && Config.utilities.enabled && !(screenState.session && Config.session.enabled))
     readonly property real totalPadding: content.anchors.margins + CUtils.clamp(content.anchors.margins - Config.border.thickness, 0, content.anchors.margins)
     readonly property real nonAnimHeight: ((content.item as Content)?.nonAnimHeight ?? 0) + totalPadding
     property real offsetScale: shouldBeActive ? 0 : 1
@@ -38,7 +38,7 @@ Item {
 
     states: State {
         name: "attachedToSidebar"
-        when: root.screenState.sidebar
+        when: false // The notification sidebar opens on its own now, not on top of the quick actions
 
         PropertyChanges {
             root.sidebarLerp: 1
@@ -78,7 +78,7 @@ Item {
         anchors.margins: Tokens.padding.large
 
         asynchronous: true
-        active: root.shouldBeActive || root.visible
+        active: true // Kept loaded: the notification sidebar takes its height from it
 
         sourceComponent: Content {
             implicitWidth: root.implicitWidth - root.totalPadding

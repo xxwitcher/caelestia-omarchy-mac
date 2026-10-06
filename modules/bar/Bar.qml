@@ -68,6 +68,10 @@ ColumnLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
+        } else if (id === "dock") {
+            popouts.currentName = "dock";
+            popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
+            popouts.hasCurrent = true;
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
@@ -144,6 +148,23 @@ ColumnLayout {
                         objectName: "taskbarActiveWindow"
                         bar: root
                         monitor: Brightness.getMonitorForScreen(root.screen)
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "windowControls"
+                delegate: EntryWrapper {
+                    visible: (item as WindowControls)?.shown ?? false // No bar gap while hidden
+                    WindowControls {
+                        objectName: "taskbarWindowControls"
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "dock"
+                delegate: EntryWrapper {
+                    DockTrigger {
+                        objectName: "taskbarDock"
                     }
                 }
             }

@@ -30,6 +30,18 @@ Item {
         anchors.margins: Tokens.padding.large
 
         Popout {
+            name: "dock"
+            sourceComponent: DockPopout {
+                popouts: root.popouts
+            }
+        }
+
+        Popout {
+            name: "fans"
+            sourceComponent: FansPopout {}
+        }
+
+        Popout {
             name: "activewindow"
             sourceComponent: ActiveWindow {
                 popouts: root.popouts
