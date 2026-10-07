@@ -69,7 +69,9 @@ ColumnLayout {
         bottomMargin: Tokens.padding.extraLarge
 
         contentHeight: root.contentChild?.implicitHeight ?? 0
-        contentItem.children: [root.contentChild]
+        // Adds the page to the content; setting contentItem.children would drop what's already there
+        // (the momentum scrolling)
+        flickableData: [root.contentChild]
 
         TapHandler {
             onTapped: flickable.focus = true

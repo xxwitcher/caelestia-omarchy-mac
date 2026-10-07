@@ -4,9 +4,11 @@ import QtQuick
 // follows the fingers and keeps gliding once they lift (the compositor sends no momentum of its
 // own), slowing with friction; a mouse wheel notch pushes the view into the same glide, adding up
 // when spun. At an edge the scroll goes on to whatever scrolls around it.
-// Declare one inside a Flickable or ListView (StyledFlickable and StyledListView have one): it sits
-// behind the content, so items and nested scroll views get the wheel first, and it only takes the
-// wheel (clicks and hover go through).
+// Declare one inside a Flickable, ListView or GridView (StyledFlickable and StyledListView have one).
+// It covers the visible area behind the content: the wheel goes to whatever is topmost under the
+// pointer first, so items and nested scroll views get it before this, and the view's own wheel
+// scrolling (no momentum) only gets what this passes on. It only takes the wheel (clicks and hover
+// go through).
 MouseArea {
     id: root
 
@@ -43,7 +45,14 @@ MouseArea {
         return true;
     }
 
-    anchors.fill: parent
+    // In the content, under its items: a ListView or GridView keeps declared children on itself,
+    // where z: -1 puts this behind the view, so the view would take the wheel first. Kept over the
+    // visible area, as the content can be shorter than the view or start above it
+    parent: flickable.contentItem
+    x: flickable.contentX
+    y: flickable.contentY
+    width: flickable.width
+    height: flickable.height
     z: -1
     enabled: flickable.interactive
     acceptedButtons: Qt.NoButton
