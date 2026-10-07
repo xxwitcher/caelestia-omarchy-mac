@@ -5,14 +5,10 @@ Flickable {
     id: root
 
     property bool doneFakeFlick
+    // In contentItem, so anything that sets contentItem.children has to list it too
+    readonly property alias glide: glide
 
     maximumFlickVelocity: 3000
-
-    // Momentum scrolling for wheels and touchpads
-    Glide {
-        flickable: root
-        horizontal: root.flickableDirection === Flickable.HorizontalFlick
-    }
 
     rebound: Transition {
         onRunningChanged: {
@@ -27,6 +23,14 @@ Flickable {
         Anim {
             properties: "x,y"
         }
+    }
+
+    // Momentum scrolling for wheels and touchpads
+    Glide {
+        id: glide
+
+        flickable: root
+        horizontal: root.flickableDirection === Flickable.HorizontalFlick
     }
 
     Timer {
