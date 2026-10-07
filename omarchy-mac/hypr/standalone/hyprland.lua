@@ -1,6 +1,6 @@
 -- Hyprland config for Caelestia on Arch Linux ARM / Asahi without Omarchy.
 -- Installed by install-hypr.sh --standalone. Personal changes: ~/.config/hypr/user.lua,
--- or the Hyprland, Displays and Keyboard pages in Caelestia's settings.
+-- or the Window style, Displays and Keyboard pages in Caelestia's settings.
 
 local home = os.getenv("HOME")
 local terminal = os.getenv("TERMINAL") or "foot"
@@ -37,9 +37,9 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("systemctl --user start xdg-desktop-autostart.target")
 end)
 
--- Look and feel (Caelestia draws its own frame, so keep gaps modest)
+-- Look and feel (border size and gaps come from Caelestia's Window style page)
 hl.config({
-  general = { gaps_in = 5, gaps_out = 10, border_size = 2, layout = "dwindle" },
+  general = { layout = "dwindle" },
   decoration = { rounding = 12, blur = { enabled = true, size = 6, passes = 2 } },
   input = {
     kb_layout = "us",
@@ -50,9 +50,6 @@ hl.config({
   },
   misc = { disable_hyprland_logo = true, disable_splash_rendering = true },
 })
-
--- 3-finger horizontal swipe switches workspace
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
 -- Apps
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd(terminal))
@@ -69,7 +66,8 @@ hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("caelestia record -r"))
 -- Windows
 hl.bind("SUPER + W", hl.dsp.window.close())
 hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
-hl.bind("SUPER + M", hl.dsp.window.fullscreen({ mode = "maximized" }))
+-- (SUPER + M minimizes, from hypr-caelestia.lua)
+hl.bind("SUPER + SHIFT + M", hl.dsp.window.fullscreen({ mode = "maximized" }))
 hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind("SUPER + J", hl.dsp.layout("togglesplit"))
 for key, dir in pairs({ LEFT = "l", RIGHT = "r", UP = "u", DOWN = "d" }) do
@@ -90,12 +88,16 @@ hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 hl.bind("XF86MonBrightnessUp", hl.dsp.global("caelestia:brightnessUp"), { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.global("caelestia:brightnessDown"), { locked = true, repeating = true })
 hl.bind("XF86AudioPlay", hl.dsp.global("caelestia:mediaToggle"), { locked = true })
 hl.bind("XF86AudioNext", hl.dsp.global("caelestia:mediaNext"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.global("caelestia:mediaPrev"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.global("caelestia:mediaToggle"), { locked = true })
+hl.bind("SHIFT + XF86AudioPlay", hl.dsp.global("caelestia:mediaSwitch"), { locked = true })
 
--- Caelestia integration (layer rules, overview gesture, settings), then your own changes
+-- Caelestia integration (layer rules, gestures, window style, CTRL + Q, SUPER + M and SUPER + A,
+-- settings), then your own changes
 pcall(dofile, home .. "/.config/caelestia/hypr-caelestia.lua")
 pcall(dofile, home .. "/.config/hypr/user.lua")

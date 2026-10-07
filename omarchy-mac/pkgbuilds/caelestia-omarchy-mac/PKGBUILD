@@ -6,7 +6,7 @@
 
 _pkgname='caelestia-shell'
 pkgname=caelestia-omarchy-mac
-pkgver=2.5.0.r14.g101161f
+pkgver=2.5.0.r18.gab2a9d7
 pkgrel=1
 pkgdesc='The Caelestia desktop shell, packaged for omarchy-mac'
 arch=('x86_64' 'aarch64')

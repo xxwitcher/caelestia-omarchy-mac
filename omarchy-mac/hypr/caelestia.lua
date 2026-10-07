@@ -1,6 +1,7 @@
 -- Caelestia (omarchy-mac fork): shell integration for Hyprland.
 -- Loaded from the end of hyprland.lua by install-hypr.sh. Settings made in Caelestia's
--- Hyprland, Displays and Keyboard pages live in ~/.config/caelestia/hypr-settings.lua.
+-- Displays and Keyboard pages live in ~/.config/caelestia/hypr-settings.lua; the Window style
+-- page writes ~/.config/caelestia/window-style.conf.
 
 local home = os.getenv("HOME")
 local qs = "caelestia-qs -c caelestia"
@@ -27,7 +28,7 @@ hl.gesture({ fingers = 3, direction = "down", action = function()
 end })
 
 -- Window style (Settings > Window style writes window-style.conf: key=value lines)
-local style = { gradient = "1", colors = "c4b5fd a855f7 da70d6", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", gaps = "1", columns = "0", floatnew = "0" }
+local style = { gradient = "1", colors = "c4b5fd a855f7 da70d6", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
 local f = io.open(home .. "/.config/caelestia/window-style.conf")
 if f then
   for line in f:lines() do
@@ -82,16 +83,45 @@ if omarchy then
       hl.unbind("switch:on:" .. switch)
       hl.bind("switch:on:" .. switch, hl.dsp.exec_cmd(lid), { locked = true })
     end
+
+    -- Display brightness keys (the Touch Bar's too) through Caelestia, as the standalone config
+    -- does, so its brightness slider shows and follows them: Omarchy's script changes the
+    -- backlight behind the shell's back and shows its own OSD, which went with its shell. Steps
+    -- are Settings > Services' brightness step; ALT keeps Omarchy's 1% steps.
+    for key, global in pairs({ XF86MonBrightnessUp = "caelestia:brightnessUp", XF86MonBrightnessDown = "caelestia:brightnessDown" }) do
+      hl.unbind(key)
+      hl.bind(key, hl.dsp.global(global), { locked = true, repeating = true })
+    end
+    for key, step in pairs({ XF86MonBrightnessUp = "+1%", XF86MonBrightnessDown = "1%-" }) do
+      hl.unbind("ALT + " .. key)
+      hl.bind("ALT + " .. key, hl.dsp.exec_cmd(qs .. " ipc call brightness set " .. step), { locked = true, repeating = true })
+    end
+
+    -- Media keys (the Touch Bar's too) went to omarchy-shell, which isn't running: play/pause,
+    -- previous and next act on the player Caelestia's media panel shows, and SHIFT + play/pause
+    -- switches to the next player
+    local media = {
+      ["XF86AudioPlay"] = "caelestia:mediaToggle",
+      ["XF86AudioPause"] = "caelestia:mediaToggle",
+      ["XF86AudioNext"] = "caelestia:mediaNext",
+      ["ALT + XF86AudioPlay"] = "caelestia:mediaNext",
+      ["XF86AudioPrev"] = "caelestia:mediaPrev",
+      ["ALT + SHIFT + XF86AudioPlay"] = "caelestia:mediaPrev",
+      ["SHIFT + XF86AudioPlay"] = "caelestia:mediaSwitch",
+      ["SHIFT + XF86AudioPause"] = "caelestia:mediaSwitch",
+    }
+    for key, global in pairs(media) do
+      pcall(hl.unbind, key)
+      hl.bind(key, hl.dsp.global(global), { locked = true })
+    end
   end
 end
 
--- Windows (same as the witchers-tweaks rounding, no-gaps, wide-columns and window-mode)
+-- Windows (same as the witchers-tweaks rounding, wide-columns and window-mode; border size and
+-- gaps are set at the end of this file). New windows tile unless floatnew is on.
 if style.roundingon == "1" then
   local percent = tonumber(style.rounding) or 60
   hl.config({ decoration = { rounding = math.floor(math.min(100, percent) * 32 / 100 + 0.5) } })
-end
-if style.gaps == "0" then
-  hl.config({ general = { gaps_in = 0, gaps_out = 0 } })
 end
 if style.columns == "1" then
   hl.config({ scrolling = { column_width = 0.97 } })
@@ -104,12 +134,52 @@ if style.fade == "1" then
   hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "default", style = "slidefade 20%" })
 end
 
--- Short swipes and quick flicks switch workspace
+-- 3-finger horizontal swipe between workspaces, tuned like the witchers-tweaks swipe: a short
+-- swipe is enough and a quick flick commits. Omarchy doesn't define the gesture, and neither does
+-- the standalone config, so it's only here (defining it twice in your own config is an error).
 if style.swipe == "1" then
-  -- Tunes the 3-finger horizontal workspace gesture; the gesture itself comes from your
-  -- Hyprland config (the standalone config defines it), since defining it twice is an error.
-  hl.config({ gestures = { workspace_swipe_distance = 150, workspace_swipe_cancel_ratio = 0.15, workspace_swipe_min_speed_to_force = 5, workspace_swipe_create_new = true } })
+  pcall(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
+  hl.config({ gestures = {
+    workspace_swipe_distance = 150, -- px for a full swipe (default 300)
+    workspace_swipe_cancel_ratio = 0.15, -- commit after 15% instead of 50%
+    workspace_swipe_min_speed_to_force = 5, -- a quick flick switches (default 30)
+    workspace_swipe_create_new = true, -- past the last workspace makes a new one
+    workspace_swipe_forever = true, -- keep going past neighbours in one swipe
+  } })
 end
+
+-- Keybindings from the witchers-tweaks: CTRL+Q closes the window, SUPER+M minimizes it (into
+-- special:minimized, where the dock brings it back), SUPER+B opens the browser and SUPER+A the
+-- default agent in a terminal (on Omarchy instead of SUPER+SHIFT+B and SUPER+SHIFT+A)
+hl.bind("CTRL + Q", hl.dsp.window.close(), { description = "Close window" })
+hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimize window" })
+if omarchy then
+  pcall(hl.unbind, "SUPER + SHIFT + B")
+  o.bind("SUPER + B", "Browser", { omarchy = "browser" })
+  pcall(hl.unbind, "SUPER + SHIFT + A")
+  o.bind("SUPER + A", "Agent", "omarchy-agent")
+else
+  -- The standalone config binds SUPER + B to the browser itself
+  hl.bind("SUPER + A", hl.dsp.global("caelestia:agent"), { description = "Agent" })
+end
+
+-- Keyboard options from the witchers-tweaks, added to the ones already set: left Ctrl and left
+-- Super trade places (the right-hand keys stay), and Caps Lock types capitals instead of being
+-- Omarchy's compose key. Settings > Keyboard & trackpad changes either; what it saves there is
+-- loaded after this (hypr-settings.lua) and wins.
+pcall(function()
+  local options = hl.get_config("input.kb_options")
+  options = (type(options) == "string" and options ~= "[[EMPTY]]") and options or ""
+  local kept = {}
+  for option in options:gmatch("[^,]+") do
+    if option ~= "compose:caps" and option ~= "ctrl:swap_lwin_lctl" then kept[#kept + 1] = option end
+  end
+  kept[#kept + 1] = "ctrl:swap_lwin_lctl"
+  local new = table.concat(kept, ",")
+  if new ~= options then
+    hl.config({ input = { kb_options = new } })
+  end
+end)
 
 -- Three-colour gradient border turning around the active window. Hyprland's borderangle loop
 -- stops after one turn on 0.56, so a timer turns it (~13 s per turn at ~30 fps); one timer per
@@ -189,3 +259,11 @@ end
 
 -- Settings from the Caelestia settings app (last, so they win)
 pcall(dofile, home .. "/.config/caelestia/hypr-settings.lua")
+
+-- Border size and gaps from the Window style page, after hypr-settings.lua so they win over the
+-- same options set on the old Hyprland page
+hl.config({ general = {
+  border_size = tonumber(style.bordersize) or 1,
+  gaps_in = tonumber(style.gapsin) or 1,
+  gaps_out = tonumber(style.gapsout) or 3,
+} })

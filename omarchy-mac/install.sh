@@ -93,6 +93,10 @@ install_smi_driver() {
 }
 install_smi_driver || echo "warning: the SMI USB display driver could not be set up (see above); the rest of Caelestia is fine" >&2
 
+# Touch Bar layout with media keys and a screenshot key, as the Witcher's Tweaks set it up (MacBooks
+# running tiny-dfr; skipped without it)
+"$here/extras/install-touchbar.sh" || echo "warning: the Touch Bar layout could not be installed (see above)" >&2
+
 "$here/link-omarchy-wallpapers.sh"
 # Without Omarchy, also install a full Hyprland config, a polkit agent and GTK/Qt theming
 if [[ -d /usr/share/omarchy ]]; then
@@ -101,7 +105,7 @@ if [[ -d /usr/share/omarchy ]]; then
   "$here/install-hypr.sh"
 else
   sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome gnome-keyring \
-    adw-gtk-theme foot thunar pipewire wireplumber networkmanager bluez bluez-utils
+    adw-gtk-theme foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
   "$here/install-hypr.sh" --standalone
 fi
 
