@@ -64,7 +64,7 @@ Singleton {
             if (GlobalConfig.general.logo === "caelestia") {
                 root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
                 root.isDefaultLogo = true;
-            } else if (GlobalConfig.general.logo) {
+            } else if (GlobalConfig.general.logo && !GlobalConfig.general.logo.startsWith("symbol:")) {
                 root.osLogo = Quickshell.iconPath(GlobalConfig.general.logo, true) || "file://" + Paths.absolutePath(GlobalConfig.general.logo);
                 root.isDefaultLogo = false;
             } else if (logo) {

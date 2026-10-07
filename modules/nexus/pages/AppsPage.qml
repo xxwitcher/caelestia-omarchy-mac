@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import Caelestia
 import Caelestia.Config
@@ -16,7 +17,42 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    // Default browser and editor (xdg-settings / xdg-mime), as desktop file names
+    property string browser
+    property string editor
+
+    function desktopFile(entry: DesktopEntry): string {
+        return entry.id.endsWith(".desktop") ? entry.id : `${entry.id}.desktop`;
+    }
+
+    function appsIn(category: string): var {
+        return [...DesktopEntries.applications.values].filter(a => (a.categories ?? []).includes(category)).sort((a, b) => a.name.localeCompare(b.name)).map(a => ({
+                    value: desktopFile(a),
+                    label: a.name
+                }));
+    }
+
     title: Tr.tr("Apps")
+
+    property Process _process1: Process {
+        id: defaultsGet
+
+        running: true
+        command: ["sh", "-c", "xdg-settings get default-web-browser; xdg-mime query default text/plain"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const [browser, editor] = text.split("\n");
+                root.browser = browser?.trim() ?? "";
+                root.editor = editor?.trim() ?? "";
+            }
+        }
+    }
+
+    property Process _process2: Process {
+        id: defaultsSet
+
+        onExited: defaultsGet.running = true
+    }
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -30,12 +66,38 @@ PageBase {
             text: Tr.tr("Default applications")
         }
 
-        DefaultRow {
+        ChoiceRow {
             first: true
+            icon: "public"
+            label: Tr.trCtx("Web browser", "default app category")
+            options: root.appsIn("WebBrowser")
+            current: root.browser
+            onChosen: v => {
+                defaultsSet.command = ["env", "-u", "BROWSER", "xdg-settings", "set", "default-web-browser", v];
+                defaultsSet.running = true;
+            }
+        }
+
+        DefaultRow {
             icon: "terminal"
             label: Tr.trCtx("Terminal", "default app category")
             status: GlobalConfig.general.apps.terminal.join(" ")
             onSelected: app => GlobalConfig.general.apps.terminal = app.command
+        }
+
+        ChoiceRow {
+            icon: "edit_note"
+            label: Tr.trCtx("Editor", "default app category")
+            options: root.appsIn("TextEditor")
+            current: root.editor
+            onChosen: v => {
+                const entry = [...DesktopEntries.applications.values].find(a => root.desktopFile(a) === v);
+                const command = (entry?.command?.[0] ?? "").split("/").pop();
+                // Omarchy's editor launcher reads its own file, by command
+                const omarchy = Agents.omarchy && command ? `; mkdir -p ~/.local/state/omarchy/defaults && printf '%s\\n' '${command}' > ~/.local/state/omarchy/defaults/editor` : "";
+                defaultsSet.command = ["sh", "-c", `xdg-mime default '${v}' text/plain${omarchy}`];
+                defaultsSet.running = true;
+            }
         }
 
         DefaultRow {

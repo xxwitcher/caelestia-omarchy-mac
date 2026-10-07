@@ -10,7 +10,7 @@ import qs.services
 PathView {
     id: root
 
-    required property SearchBar search
+    required property var search
     required property var screenState
     required property var panels
     required property var content

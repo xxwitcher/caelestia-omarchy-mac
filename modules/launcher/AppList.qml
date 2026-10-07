@@ -13,7 +13,7 @@ import qs.modules.launcher.services
 StyledListView {
     id: root
 
-    required property SearchBar search
+    required property var search
     required property ScreenState screenState
 
     property string displayText

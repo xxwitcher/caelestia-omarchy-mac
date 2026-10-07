@@ -21,6 +21,8 @@ class GeneralApps : public settings::ObjectNode {
     CONFIG_PROPERTY(QStringList, audio, { u"pwvucontrol"_s })
     CONFIG_PROPERTY(QStringList, playback, { u"mpv"_s })
     CONFIG_PROPERTY(QStringList, explorer, { u"thunar"_s })
+    // The coding agent the dashboard's Agent tab runs (an id assets/agent/launch.sh knows, e.g. claude)
+    CONFIG_PROPERTY(QString, agent, {})
 };
 
 class GeneralIdleTimeout : public settings::ObjectNode {

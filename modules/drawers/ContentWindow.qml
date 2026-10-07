@@ -121,6 +121,8 @@ StyledWindow {
                 return true;
             if (panels.popouts.currentName.startsWith("traymenu") && (panels.popouts.current as StackView)?.depth > 1)
                 return true;
+            if (panels.popouts.held)
+                return true;
             return false;
         }
         windows: [root]

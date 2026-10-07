@@ -26,15 +26,22 @@ PageBase {
 
         ToggleRow {
             first: true
-            last: true
             text: Tr.tr("Show the dock in the taskbar")
-            subtext: Tr.tr("Hover it to open; right click an app there to pin it")
+            subtext: Tr.tr("Hover it to open; right click an app for its menu")
             checked: root.dockEntry?.enabled ?? false
             onToggled: {
                 const e = GlobalConfig.bar.entries.values.find(e => e.id === "dock");
                 if (e)
                     e.enabled = checked;
             }
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Show the apps button in the dock")
+            subtext: Tr.tr("Opens the app launcher")
+            checked: Dock.showAppsButton
+            onToggled: Dock.setShowAppsButton(checked)
         }
 
         SectionHeader {

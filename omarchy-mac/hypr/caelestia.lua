@@ -10,8 +10,11 @@ hl.layer_rule({ match = { namespace = "caelestia-(border-exclusion|area-picker|o
 hl.layer_rule({ match = { namespace = "caelestia-(drawers|background)" }, animation = "fade" })
 
 -- Shell shortcuts
--- (chosen to avoid Omarchy's own bindings, e.g. the SUPER + TAB family and SUPER + SPACE)
+-- (chosen to avoid Omarchy's own bindings, e.g. the SUPER + TAB family)
 hl.bind("SUPER + GRAVE", hl.dsp.global("caelestia:overview"))
+-- SUPER + SPACE opens the app launcher (instead of the Omarchy menu, on Omarchy)
+pcall(hl.unbind, "SUPER + SPACE")
+hl.bind("SUPER + SPACE", hl.dsp.global("caelestia:launcher"))
 hl.bind("SUPER + N", hl.dsp.global("caelestia:sidebar"))
 hl.bind("SUPER + COMMA", hl.dsp.exec_cmd(qs .. " ipc call nexus open"))
 
@@ -32,6 +35,54 @@ if f then
     if k then style[k] = v end
   end
   f:close()
+end
+
+-- On Omarchy (its config defines the global `o`), Caelestia replaces the Omarchy shell;
+-- shell=omarchy in window-style.conf keeps Omarchy's. Other distros start Caelestia themselves
+-- (the standalone config does) and skip all of this.
+local omarchy = type(_G.o) == "table" and type(_G.o.launch) == "function"
+_G.caelestia_shell = style.shell or "caelestia"
+
+if omarchy then
+  -- Omarchy has no switch for its shell, so its launcher is swapped for Caelestia's wherever
+  -- Hyprland runs it: the autostart (hl.exec_cmd) and omarchy-restart-shell (hl.dsp.exec_cmd).
+  -- The functions are looked up when called, so wrapping them here, after Omarchy's config, is enough.
+  local function swap_shell(fn)
+    return function(cmd, ...)
+      if cmd == "omarchy-launch-shell" and _G.caelestia_shell ~= "omarchy" then
+        cmd = "caelestia shell -d"
+      end
+      return fn(cmd, ...)
+    end
+  end
+  -- Wrap once per Lua state: a reload re-runs this file against the already wrapped functions
+  if hl.exec_cmd ~= _G.caelestia_exec_cmd then
+    _G.caelestia_exec_cmd = swap_shell(hl.exec_cmd)
+    hl.exec_cmd = _G.caelestia_exec_cmd
+  end
+  if hl.dsp.exec_cmd ~= _G.caelestia_dsp_exec_cmd then
+    _G.caelestia_dsp_exec_cmd = swap_shell(hl.dsp.exec_cmd)
+    hl.dsp.exec_cmd = _G.caelestia_dsp_exec_cmd
+  end
+
+  -- Without Omarchy's shell, its polkit agent and lock are gone: run polkit-gnome, and point
+  -- Omarchy's lock bindings (which go through omarchy-shell) at Caelestia's lock
+  if _G.caelestia_shell ~= "omarchy" then
+    hl.on("hyprland.start", function()
+      hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
+    end)
+
+    local lock = qs .. " ipc call lock lock"
+    hl.unbind("SUPER + CTRL + L")
+    hl.bind("SUPER + CTRL + L", hl.dsp.exec_cmd(lock))
+
+    -- Same as omarchy-system-lid-close: lock when the lid closes with no external monitor
+    local lid = "sh -c 'if omarchy-hw-laptop-closed && ! omarchy-hw-external-monitors; then " .. lock .. "; fi; omarchy-hyprland-monitor-clamshell'"
+    for _, switch in ipairs({ "Lid Switch", "Apple SMC power/lid events" }) do
+      hl.unbind("switch:on:" .. switch)
+      hl.bind("switch:on:" .. switch, hl.dsp.exec_cmd(lid), { locked = true })
+    end
+  end
 end
 
 -- Windows (same as the witchers-tweaks rounding, no-gaps, wide-columns and window-mode)

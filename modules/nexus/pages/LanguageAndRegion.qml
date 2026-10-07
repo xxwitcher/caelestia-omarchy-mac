@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
@@ -10,6 +11,42 @@ import qs.modules.nexus.common
 
 PageBase {
     id: root
+
+    // Time zone and network time (timedatectl)
+    property list<string> zones: []
+    property string zone
+    property bool ntp
+
+    function refreshTime(): void {
+        timeGet.running = true;
+    }
+
+    property Process _process1: Process {
+        running: true
+        command: ["timedatectl", "list-timezones"]
+        stdout: StdioCollector {
+            onStreamFinished: root.zones = text.split("\n").filter(z => z)
+        }
+    }
+
+    property Process _process2: Process {
+        id: timeGet
+
+        running: true
+        command: ["timedatectl", "show", "-p", "Timezone", "-p", "NTP"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.zone = text.match(/^Timezone=(.*)$/m)?.[1] ?? "";
+                root.ntp = text.match(/^NTP=(.*)$/m)?.[1] === "yes";
+            }
+        }
+    }
+
+    property Process _process3: Process {
+        id: timeSet
+
+        onExited: root.refreshTime()
+    }
 
     // Temperature units (there must be one for each value of the TemperatureUnit enum)
     readonly property list<MenuItem> tempItems: [
@@ -187,8 +224,31 @@ PageBase {
             text: Tr.tr("Time & date")
         }
 
-        SelectRow {
+        ChoiceRow {
             first: true
+            icon: "schedule"
+            label: Tr.tr("Time zone")
+            options: root.zones.map(z => ({
+                        value: z,
+                        label: z.replace(/_/g, " ").replace(/\//g, " / ")
+                    }))
+            current: root.zone
+            onChosen: v => {
+                timeSet.command = ["timedatectl", "set-timezone", v];
+                timeSet.running = true;
+            }
+        }
+
+        ToggleRow {
+            text: Tr.tr("Set the time from the internet")
+            checked: root.ntp
+            onToggled: {
+                timeSet.command = ["timedatectl", "set-ntp", checked ? "true" : "false"];
+                timeSet.running = true;
+            }
+        }
+
+        SelectRow {
             last: true
             label: Tr.tr("Clock format")
             subtext: Tr.tr("How times are shown across the shell")

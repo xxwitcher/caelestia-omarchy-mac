@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import Caelestia.Config
 import qs.components
+import qs.components.containers
 import qs.components.controls
 import qs.services
 import qs.modules.launcher.services
@@ -13,7 +14,12 @@ import qs.modules.launcher.services
 GridView {
     id: root
 
-    required property SearchBar search
+    // Momentum scrolling for wheels and touchpads
+    Glide {
+        flickable: root
+    }
+
+    required property var search
     required property ScreenState screenState
     readonly property int columns: 6
     readonly property int rows: Math.min(4, Math.ceil(count / columns))

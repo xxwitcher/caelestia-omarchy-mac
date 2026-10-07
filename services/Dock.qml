@@ -11,6 +11,14 @@ Singleton {
     id: root
 
     readonly property list<string> pinned: adapter.pinned
+    // The app drawer button at the end of the dock
+    readonly property bool showAppsButton: adapter.showAppsButton
+    // Desktop ids that open at login (~/.config/autostart)
+    property list<string> autostart: []
+
+    function setShowAppsButton(show: bool): void {
+        adapter.showAppsButton = show;
+    }
 
     function move(id: string, by: int): void {
         const list = [...adapter.pinned];
@@ -79,11 +87,73 @@ Singleton {
         Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "${addr}" })` : `focuswindow ${addr}`);
     }
 
+    // A window, brought back first when it's minimized
+    function focusWindow(toplevel: var): void {
+        const a = `address:0x${toplevel.address}`;
+        if (toplevel.workspace?.name === "special:minimized") {
+            const ws = Hypr.activeWsId;
+            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.move({ window = "${a}", workspace = "${ws}", follow = true })` : `movetoworkspace ${ws},${a}`);
+        }
+        Hypr.dispatch(Hypr.usingLua ? `hl.dsp.focus({ window = "${a}" })` : `focuswindow ${a}`);
+    }
+
+    function isMinimized(toplevel: var): bool {
+        return toplevel?.workspace?.name === "special:minimized";
+    }
+
+    // Hide: every window of the app into special:minimized, where the dock brings them back from
+    function minimizeAll(entry: DesktopEntry): void {
+        for (const w of windowsFor(entry).filter(w => !isMinimized(w))) {
+            const a = `address:0x${w.address}`;
+            Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.move({ window = "${a}", workspace = "special:minimized", follow = false })` : `movetoworkspacesilent special:minimized,${a}`);
+        }
+    }
+
+    function launch(entry: DesktopEntry): void {
+        Launcher.Apps.launch(entry);
+    }
+
+    function showAllWindows(): void {
+        Hypr.dispatch(Hypr.usingLua ? `hl.dsp.global("caelestia:overviewOpen")` : "global caelestia:overviewOpen");
+    }
+
+    function opensAtLogin(entry: DesktopEntry): bool {
+        return autostart.includes(entry.id.replace(/\.desktop$/, ""));
+    }
+
+    // Open at Login: a copy of the app's launcher in ~/.config/autostart, without the keys that
+    // would hide it from the session (as the Witcher's Tweaks dock does)
+    function setOpensAtLogin(entry: DesktopEntry, on: bool): void {
+        const id = entry.id.replace(/\.desktop$/, "");
+        autostartSet.command = ["sh", "-c", on ? 'dir="${XDG_CONFIG_HOME:-$HOME/.config}/autostart"; for d in "${XDG_DATA_HOME:-$HOME/.local/share}/applications" /usr/local/share/applications /usr/share/applications /var/lib/flatpak/exports/share/applications "$HOME/.local/share/flatpak/exports/share/applications"; do if [ -f "$d/$1.desktop" ]; then mkdir -p "$dir" && grep -v -E "^(Hidden|NoDisplay)=" "$d/$1.desktop" > "$dir/$1.desktop"; exit; fi; done; exit 1' : 'rm -f "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/$1.desktop"', "sh", id];
+        autostartSet.running = true;
+    }
+
+    function refreshAutostart(): void {
+        autostartGet.running = true;
+    }
+
     function closeAll(entry: DesktopEntry): void {
         for (const w of windowsFor(entry)) {
             const addr = `address:0x${w.address}`;
             Hypr.dispatch(Hypr.usingLua ? `hl.dsp.window.close({ window = "${addr}" })` : `closewindow ${addr}`);
         }
+    }
+
+    Process {
+        id: autostartGet
+
+        running: true
+        command: ["sh", "-c", 'ls "${XDG_CONFIG_HOME:-$HOME/.config}/autostart" 2>/dev/null']
+        stdout: StdioCollector {
+            onStreamFinished: root.autostart = text.split("\n").filter(f => f.endsWith(".desktop")).map(f => f.slice(0, -8))
+        }
+    }
+
+    Process {
+        id: autostartSet
+
+        onExited: autostartGet.running = true
     }
 
     FileView {
@@ -100,6 +170,7 @@ Singleton {
             id: adapter
 
             property list<string> pinned: []
+            property bool showAppsButton: true
         }
     }
 }

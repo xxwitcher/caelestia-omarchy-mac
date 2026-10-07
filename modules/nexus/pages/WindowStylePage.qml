@@ -85,15 +85,16 @@ PageBase {
                 })
         }
 
-        StepperRow {
+        RangeRow {
             visible: root.style.roundingon === "1"
+            icon: "rounded_corner"
             label: Tr.tr("Corner rounding")
-            subtext: `${root.style.rounding}%`
-            value: Number(root.style.rounding)
             from: 0
             to: 100
-            stepSize: 5
-            onMoved: v => root.save({
+            step: 5
+            current: Number(root.style.rounding)
+            format: v => `${Math.round(v)}%`
+            onCommitted: v => root.save({
                     rounding: String(Math.round(v))
                 })
         }

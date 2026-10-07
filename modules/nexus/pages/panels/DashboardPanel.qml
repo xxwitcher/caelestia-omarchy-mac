@@ -79,6 +79,15 @@ PageBase {
 
         // Performance widgets
         SectionHeader {
+            text: Tr.tr("Agent")
+        }
+
+        AgentRow {
+            first: true
+            last: true
+        }
+
+        SectionHeader {
             text: Tr.tr("Performance widgets")
         }
 

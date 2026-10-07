@@ -51,8 +51,11 @@ Item {
     Popup {
         id: popup
 
-        y: well.height + 6
+        // Upwards, so a swatch low on a page doesn't push it out of the window (below only when
+        // there's no room above); the margins keep it inside the window either way
+        y: well.mapToItem(null, 0, 0).y > implicitHeight + 12 ? -implicitHeight - 6 : well.height + 6
         x: Math.min(0, well.width - width)
+        margins: Tokens.padding.small
         width: 260
         padding: Tokens.padding.medium
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside

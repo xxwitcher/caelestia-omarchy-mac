@@ -49,6 +49,73 @@ PageBase {
             onMoved: v => GlobalConfig.bar.dragThreshold = v
         }
 
+        // The launcher button at the top
+        SectionHeader {
+            text: Tr.tr("Launcher button")
+        }
+
+        ToggleRow {
+            first: true
+            text: Tr.tr("Show the launcher button")
+            subtext: Tr.tr("At the top of the taskbar; opens the app launcher")
+            checked: Config.bar.entries.values.find(e => e.id === "logo")?.enabled ?? false
+            onToggled: {
+                const e = GlobalConfig.bar.entries.values.find(e => e.id === "logo");
+                if (e)
+                    e.enabled = checked;
+            }
+        }
+
+        ChoiceRow {
+            last: true
+            icon: "apps"
+            label: Tr.tr("Icon")
+            options: [
+                {
+                    value: "",
+                    label: Tr.tr("Distro logo")
+                },
+                {
+                    value: "caelestia",
+                    label: Tr.tr("Caelestia logo")
+                },
+                {
+                    value: "symbol:apps",
+                    label: Tr.tr("Apps grid")
+                },
+                {
+                    value: "symbol:grid_view",
+                    label: Tr.tr("Tiles")
+                },
+                {
+                    value: "symbol:widgets",
+                    label: Tr.tr("Widgets")
+                },
+                {
+                    value: "symbol:rocket_launch",
+                    label: Tr.tr("Rocket")
+                },
+                {
+                    value: "symbol:search",
+                    label: Tr.tr("Search")
+                },
+                {
+                    value: "symbol:menu",
+                    label: Tr.tr("Menu")
+                },
+                {
+                    value: "symbol:blur_on",
+                    label: Tr.tr("Dots")
+                },
+                {
+                    value: "symbol:star",
+                    label: Tr.tr("Star")
+                }
+            ]
+            current: GlobalConfig.general.logo ?? ""
+            onChosen: v => GlobalConfig.general.logo = v
+        }
+
         // Components
         SectionHeader {
             text: Tr.tr("Components")

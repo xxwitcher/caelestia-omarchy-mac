@@ -22,6 +22,29 @@ PageBase {
 
     title: Tr.tr("Security")
 
+    // Remote login: whether sshd is installed, and running
+    property bool hasSshd
+    property bool sshd
+
+    property Process _sshdGet: Process {
+        id: sshdGet
+
+        running: true
+        command: ["sh", "-c", "systemctl list-unit-files sshd.service --no-legend | grep -q . && echo installed; systemctl is-active --quiet sshd && echo active"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.hasSshd = text.includes("installed");
+                root.sshd = text.includes("active");
+            }
+        }
+    }
+
+    property Process _sshdSet: Process {
+        id: sshdSet
+
+        onExited: sshdGet.running = true
+    }
+
     property Process _process1: Process {
         running: true
         command: ["sh", "-c", "command -v fprintd-list >/dev/null && fprintd-list \"$USER\" 2>/dev/null | sed -n 's/^ *- #[0-9]*: //p'; command -v fprintd-list >/dev/null && echo __fprint__"]
@@ -84,6 +107,24 @@ PageBase {
             text: Tr.tr("Enrol a finger")
             disabled: !root.hasFprint
             onClicked: root.inTerminal("fprintd-enroll")
+        }
+
+        SectionHeader {
+            visible: root.hasSshd
+            text: Tr.tr("Access")
+        }
+
+        ToggleRow {
+            visible: root.hasSshd
+            first: true
+            last: true
+            text: Tr.tr("Remote login (SSH)")
+            subtext: Tr.tr("Let other computers sign in to this one over the network")
+            checked: root.sshd
+            onToggled: {
+                sshdSet.command = ["pkexec", "systemctl", checked ? "enable" : "disable", "--now", "sshd.service"];
+                sshdSet.running = true;
+            }
         }
 
         SectionHeader {

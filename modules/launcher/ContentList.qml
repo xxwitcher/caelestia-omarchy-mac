@@ -15,7 +15,7 @@ Item {
     required property ScreenState screenState
     required property var panels
     required property real maxHeight
-    required property SearchBar search
+    required property var search
     required property int padding
     required property int rounding
 

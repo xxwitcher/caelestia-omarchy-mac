@@ -7,6 +7,7 @@ import Caelestia.Config
 import Caelestia.I18n
 import Caelestia.Models
 import qs.components
+import qs.components.containers
 import qs.components.controls
 import qs.components.effects
 import qs.components.filedialog
@@ -76,6 +77,11 @@ Item {
 
     GridView {
         id: view
+
+        // Momentum scrolling for wheels and touchpads
+        Glide {
+            flickable: view
+        }
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.extraSmall + Tokens.padding.medium

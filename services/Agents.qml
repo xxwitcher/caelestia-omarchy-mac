@@ -1,0 +1,211 @@
+pragma Singleton
+
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Caelestia.Config
+import qs.utils
+
+// Coding agents for the dashboard's Agent tab: which one is the default, and its usage (plan and
+// rate limits). Ported from the Witcher's Tweaks agent panel, which used Omarchy's agents. The
+// usage collectors are bundled (assets/agent, from Omarchy), so this works without Omarchy; on
+// Omarchy the default agent is shared with Omarchy's own (~/.config/omarchy/defaults/agent).
+Singleton {
+    id: root
+
+    // Omarchy's agent list (omarchy-default-agent), in its settings order
+    readonly property var list: [
+        { id: "claude", name: "Claude Code" },
+        { id: "codex", name: "Codex" },
+        { id: "agy", name: "Antigravity" },
+        { id: "copilot", name: "GitHub Copilot" },
+        { id: "crush", name: "Crush" },
+        { id: "grok", name: "Grok" },
+        { id: "hermes", name: "Hermes" },
+        { id: "omp", name: "Oh My Pi" },
+        { id: "opencode", name: "OpenCode" },
+        { id: "ori", name: "Ori" },
+        { id: "pi", name: "Pi" }
+    ]
+    // Agents with a bundled usage collector (assets/agent/usage-<id>.py)
+    readonly property var tracked: ["claude", "codex"]
+
+    readonly property string scriptDir: `${Quickshell.shellDir}/assets/agent`
+    readonly property string usageDir: `${Paths.state}/agents/usage`
+    readonly property string omarchyDefaultFile: `${Paths.home}/.config/omarchy/defaults/agent`
+    readonly property bool omarchy: !!Quickshell.env("OMARCHY_PATH")
+
+    property string omarchyDefault
+    readonly property string defaultAgent: GlobalConfig.general.apps.agent || omarchyDefault
+
+    // Usage records by agent id (what the collectors write)
+    property var records: ({})
+    readonly property var usage: records[defaultAgent] ?? null
+
+    // Collectors only run once the tab has been shown (they scan transcripts)
+    property bool active
+
+    // Installed agents (checkInstalled refreshes it; assets/agent/install.sh knows how to tell)
+    property var installed: []
+
+    function nameOf(id: string): string {
+        return list.find(a => a.id === id)?.name ?? (id || "Agent");
+    }
+
+    function iconOf(id: string): string {
+        if (!tracked.includes(id))
+            return "";
+        return Qt.resolvedUrl(`${scriptDir}/icons/${id}${id === "codex" && Colours.light ? "-light" : ""}.svg`);
+    }
+
+    function checkInstalled(): void {
+        if (!installedCheck.running)
+            installedCheck.running = true;
+    }
+
+    // Make it the default, and install it first when it isn't (in a terminal, like Omarchy)
+    function pick(id: string): void {
+        setDefault(id);
+        pickCheck.agent = id;
+        pickCheck.running = true;
+    }
+
+    function setDefault(id: string): void {
+        GlobalConfig.general.apps.agent = id;
+        // Keep Omarchy's own launcher (its keybinding and menu) on the same agent
+        if (omarchy)
+            omarchyDefaultView.setText(`${id}\n`);
+    }
+
+    // Opening the tab wants the numbers that go stale on the wire, not another scan of every
+    // transcript: the collectors reuse their recent scans in this mode
+    function refreshLimits(): void {
+        active = true;
+        run(["--limits-only"]);
+    }
+
+    function refresh(): void {
+        active = true;
+        run(["--force"]);
+    }
+
+    property var queued: null
+
+    function run(flags: var, ids: var): void {
+        const agents = (ids ?? [defaultAgent]).filter(id => tracked.includes(id));
+        if (agents.length === 0)
+            return;
+        const command = [`${scriptDir}/usage-update.sh`, ...flags, ...agents];
+        if (updater.running) {
+            queued = command;
+            return;
+        }
+        updater.command = command;
+        updater.running = true;
+    }
+
+    // A collector that couldn't reach its limits endpoint (the seconds after login before the
+    // network is up) sets retryAdvised: try that one again sooner than the full interval
+    function scheduleRetry(): void {
+        const advising = tracked.filter(id => records[id]?.retryAdvised === true);
+        retryTimer.ids = advising;
+        if (advising.length > 0)
+            retryTimer.restart();
+        else
+            retryTimer.stop();
+    }
+
+    onDefaultAgentChanged: {
+        if (active)
+            run([]);
+    }
+
+    Process {
+        id: installedCheck
+
+        command: [`${root.scriptDir}/install.sh`, "--installed"]
+        stdout: StdioCollector {
+            onStreamFinished: root.installed = text.split("\n").filter(id => id)
+        }
+    }
+
+    Process {
+        id: pickCheck
+
+        property string agent
+
+        command: [`${root.scriptDir}/install.sh`, "--check", agent]
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                Quickshell.execDetached([...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, `${root.scriptDir}/install.sh`, agent, root.nameOf(agent)]);
+        }
+    }
+
+    Process {
+        id: updater
+
+        onExited: {
+            if (root.queued) {
+                command = root.queued;
+                root.queued = null;
+                running = true;
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.trim())
+                    console.warn("Agents:", text.trim());
+            }
+        }
+    }
+
+    Timer {
+        interval: 15 * 60 * 1000
+        running: root.active
+        repeat: true
+        onTriggered: root.run([])
+    }
+
+    Timer {
+        id: retryTimer
+
+        property var ids: []
+
+        interval: 30000
+        onTriggered: root.run(["--limits-only"], ids)
+    }
+
+    Instantiator {
+        model: root.tracked
+
+        FileView {
+            required property string modelData
+
+            path: `${root.usageDir}/${modelData}.json`
+            watchChanges: true
+            printErrors: false
+            onFileChanged: reload()
+            onLoaded: {
+                try {
+                    const map = Object.assign({}, root.records);
+                    map[modelData] = JSON.parse(text());
+                    root.records = map;
+                    root.scheduleRetry();
+                } catch (e) {
+                    console.warn("Agents: ignoring bad usage record", path, e);
+                }
+            }
+        }
+    }
+
+    FileView {
+        id: omarchyDefaultView
+
+        path: root.omarchyDefaultFile
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: root.omarchyDefault = text().trim()
+        onLoadFailed: root.omarchyDefault = ""
+    }
+}

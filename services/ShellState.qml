@@ -3,14 +3,16 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Caelestia
+import Caelestia.Config
 import qs.components
 import qs.services
 
 Singleton {
     property ShellRoot shellRoot
 
+    // A disabled sidebar never counts as open (it would silence notification popups for nothing)
     function anySidebarOpen(): bool {
-        return states.instances.some(s => s.sidebar);
+        return GlobalConfig.sidebar.enabled && states.instances.some(s => s.sidebar);
     }
 
     function forScreen(screen: ShellScreen): ScreenState {

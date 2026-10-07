@@ -85,13 +85,17 @@ PageBase {
                     onToggled: timeout.modelData.enabled = checked
                 }
 
-                StepperRow {
+                ChoiceRow {
+                    readonly property int minutes: Math.round(timeout.modelData.timeout / 60)
+
                     last: timeout.index === GlobalConfig.general.idle.timeouts.values.length - 1
-                    label: Tr.tr("Minutes")
-                    value: Math.round(timeout.modelData.timeout / 60)
-                    from: 1
-                    to: 120
-                    onMoved: v => timeout.modelData.timeout = Math.round(v) * 60
+                    label: Tr.tr("After")
+                    options: [...new Set([1, 2, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120, minutes])].sort((a, b) => a - b).map(m => ({
+                                value: m,
+                                label: m % 60 === 0 ? Tr.tr("%1 h").arg(m / 60) : Tr.tr("%1 min").arg(m)
+                            }))
+                    current: minutes
+                    onChosen: v => timeout.modelData.timeout = v * 60
                 }
             }
         }

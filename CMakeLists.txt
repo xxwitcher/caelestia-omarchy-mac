@@ -73,6 +73,9 @@ if("shell" IN_LIST ENABLE_MODULES)
     endforeach()
 
     install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py DESTINATION "${INSTALL_QSCONFDIR}/assets")
+    install(PROGRAMS assets/settings/dns.sh DESTINATION "${INSTALL_QSCONFDIR}/assets/settings")
+    install(PROGRAMS assets/agent/launch.sh assets/agent/install.sh assets/agent/usage-update.sh assets/agent/usage-claude.py
+        assets/agent/usage-codex.py DESTINATION "${INSTALL_QSCONFDIR}/assets/agent")
 
     file(READ shell.qml SHELL_QML)
     string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")

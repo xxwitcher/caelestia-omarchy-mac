@@ -18,16 +18,37 @@ Singleton {
     readonly property var overrides: adapter.overrides
     readonly property var monitors: adapter.monitors
 
+    // m: { mode, position, scale, transform, mirror, disabled }
     function monitorLua(name: string, m: var): string {
-        return `hl.monitor({ output = ${JSON.stringify(name)}, mode = ${JSON.stringify(m.mode ?? "preferred")}, position = ${JSON.stringify(m.position ?? "auto")}, scale = ${m.scale ?? "auto"} })`;
+        if (m.disabled)
+            return `hl.monitor({ output = ${JSON.stringify(name)}, disabled = true })`;
+        const fields = [`output = ${JSON.stringify(name)}`, `mode = ${JSON.stringify(m.mode ?? "preferred")}`, `position = ${JSON.stringify(m.position ?? "auto")}`, `scale = ${m.scale ?? "auto"}`];
+        if (m.transform)
+            fields.push(`transform = ${m.transform}`);
+        if (m.mirror)
+            fields.push(`mirror = ${JSON.stringify(m.mirror)}`);
+        return `hl.monitor({ ${fields.join(", ")} })`;
     }
 
-    // values: { mode, position, scale }; applied live and kept in hypr-settings.lua
+    // values: { mode, position, scale, transform, mirror, disabled }; applied live and kept in
+    // hypr-settings.lua
     function setMonitor(name: string, values: var): void {
         const all = Object.assign({}, adapter.monitors);
         all[name] = Object.assign({}, all[name] ?? {}, values);
         adapter.monitors = all;
         Quickshell.execDetached(["hyprctl", "eval", monitorLua(name, all[name])]);
+        writeLua();
+    }
+
+    // Several monitors ({ name: values }) applied live only, so they can be tried out first
+    function previewMonitors(monitors: var): void {
+        Quickshell.execDetached(["hyprctl", "eval", Object.entries(monitors).map(([name, m]) => monitorLua(name, m)).join("; ")]);
+    }
+
+    // Several monitors ({ name: values }) applied live and kept
+    function saveMonitors(monitors: var): void {
+        adapter.monitors = Object.assign({}, adapter.monitors, monitors);
+        previewMonitors(monitors);
         writeLua();
     }
 
@@ -56,7 +77,8 @@ Singleton {
 
     // "a:b.c" with value v -> hl.config({ a = { b = { c = v } } })
     function luaFor(name: string, value: var): string {
-        const keys = name.split(/[:.]/);
+        // Lua spells dashed option names (tap-to-click) with underscores
+        const keys = name.split(/[:.]/).map(k => k.replace(/-/g, "_"));
         let body = luaValue(value);
         for (let i = keys.length - 1; i >= 0; i--)
             body = `{ ${/^[A-Za-z_][A-Za-z0-9_]*$/.test(keys[i]) ? keys[i] : `["${keys[i]}"]`} = ${body} }`;
@@ -64,9 +86,16 @@ Singleton {
     }
 
     function set(name: string, value: var): void {
+        setMany({
+            [name]: value
+        });
+    }
+
+    // Several options ({ name: value }) in one go, kept only when Hyprland takes them all (the
+    // keyboard layout and its variants have to change together)
+    function setMany(values: var): void {
         const proc = applyComp.createObject(root, {
-            name,
-            value
+            values
         });
         proc.running = true;
     }
@@ -98,16 +127,13 @@ Singleton {
         Process {
             id: proc
 
-            required property string name
-            required property var value
+            required property var values
 
-            command: ["hyprctl", "eval", root.luaFor(name, value)]
+            command: ["hyprctl", "eval", Object.entries(values).map(([name, value]) => root.luaFor(name, value)).join("; ")]
             stdout: StdioCollector {
                 onStreamFinished: {
                     if (text.trim() === "ok") {
-                        const all = Object.assign({}, adapter.overrides);
-                        all[proc.name] = proc.value;
-                        adapter.overrides = all;
+                        adapter.overrides = Object.assign({}, adapter.overrides, proc.values);
                         root.lastError = "";
                         root.writeLua();
                     } else {

@@ -18,6 +18,17 @@ ColumnLayout {
     required property BarPopouts.Wrapper popouts
     required property bool fullscreen
     readonly property int vPadding: Tokens.padding.large
+    // Bumped when an entry shows or hides (window controls hide themselves), for firstShown
+    property int shownRevision
+    // The first entry actually showing, which gets the top margin (with the launcher button off and
+    // the window controls hidden, that's the workspaces)
+    readonly property int firstShown: {
+        shownRevision;
+        for (let i = 0; i < repeater.count; i++)
+            if (repeater.itemAt(i)?.visible)
+                return i;
+        return 0;
+    }
 
     function closeTray(): void {
         if (!Config.bar.tray.compact)
@@ -210,7 +221,8 @@ ColumnLayout {
         default property Item item
         readonly property string entryId: modelData.id
 
-        Layout.topMargin: index === 0 ? root.vPadding : 0
+        // The launcher button keeps its padding; anything else first sits a border's width down
+        Layout.topMargin: index === root.firstShown ? (entryId === "logo" ? root.vPadding : Config.border.thickness) : 0
         Layout.bottomMargin: index === repeater.count - 1 ? root.vPadding : 0
         Layout.alignment: Qt.AlignHCenter
 
@@ -218,5 +230,8 @@ ColumnLayout {
         implicitHeight: item?.implicitHeight ?? 0
 
         children: item
+
+        onVisibleChanged: root.shownRevision++
+        Component.onCompleted: root.shownRevision++
     }
 }

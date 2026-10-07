@@ -5,8 +5,12 @@ import qs.components.effects
 import qs.services
 import qs.utils
 
+// The taskbar's launcher button: the logo (Caelestia's or the distro's), or a Material symbol when
+// general.logo is "symbol:<name>" (Settings > Panels > Taskbar)
 Item {
     id: root
+
+    readonly property string symbol: (GlobalConfig.general.logo ?? "").startsWith("symbol:") ? GlobalConfig.general.logo.slice(7) : ""
 
     implicitWidth: Math.round(Tokens.font.body.large.pointSize * 1.2)
     implicitHeight: Math.round(Tokens.font.body.large.pointSize * 1.2)
@@ -23,7 +27,17 @@ Item {
     Loader {
         asynchronous: true
         anchors.centerIn: parent
-        sourceComponent: SysInfo.isDefaultLogo ? caelestiaLogo : distroIcon
+        sourceComponent: root.symbol ? symbolIcon : SysInfo.isDefaultLogo ? caelestiaLogo : distroIcon
+    }
+
+    Component {
+        id: symbolIcon
+
+        MaterialIcon {
+            text: root.symbol
+            color: Colours.palette.m3tertiary
+            fontStyle: Tokens.font.icon.medium
+        }
     }
 
     Component {

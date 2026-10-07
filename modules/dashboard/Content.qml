@@ -192,7 +192,9 @@ Item {
             Component {
                 id: agentComponent
 
-                AgentTab {}
+                AgentTab {
+                    screenState: root.screenState
+                }
             }
 
             Component {

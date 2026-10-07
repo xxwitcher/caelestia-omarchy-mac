@@ -7,7 +7,7 @@ import Caelestia.Config
 import qs.components
 import qs.services
 
-// Bar entry that opens the dock popout on hover: a pill with the first few dock apps
+// Bar entry that opens the dock popout on hover: a pill with the first few dock apps, nothing else
 StyledRect {
     id: root
 
@@ -36,12 +36,6 @@ StyledRect {
                 implicitSize: root.iconSize
                 source: Quickshell.iconPath(modelData.icon, "image-missing")
             }
-        }
-
-        MaterialIcon {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "more_horiz"
-            color: Colours.palette.m3onSurfaceVariant
         }
     }
 

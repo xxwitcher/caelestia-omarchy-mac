@@ -10,8 +10,8 @@ import qs.components
 import qs.components.controls
 import qs.modules.nexus.common
 
-// System updates: pending package count, and an update run in a terminal
-// (omarchy-update when available, otherwise yay or pacman).
+// System updates: pending package count, and an update run in a terminal (omarchy-update when
+// Omarchy is installed, which updates Omarchy and the system; otherwise yay or pacman).
 PageBase {
     id: root
 
@@ -39,6 +39,27 @@ PageBase {
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
 
+        // First, so a long list never pushes them out of reach
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: Tokens.spacing.large
+            spacing: Tokens.spacing.medium
+
+            TextButton {
+                type: TextButton.Tonal
+                text: Tr.tr("Check again")
+                onClicked: {
+                    root.checking = true;
+                    check.running = true;
+                }
+            }
+
+            TextButton {
+                text: Tr.tr("Update now")
+                onClicked: Quickshell.execDetached(["sh", "-c", `exec ${GlobalConfig.general.apps.terminal.join(" ")} -e sh -c 'if command -v omarchy-update >/dev/null; then omarchy-update; elif command -v yay >/dev/null; then yay -Syu; else sudo pacman -Syu; fi; echo; read -p "Done. Press Enter to close" _'`])
+            }
+        }
+
         SectionHeader {
             first: true
             text: root.checking ? Tr.tr("Checking for updates…") : root.pending.length === 0 ? Tr.tr("Everything is up to date") : Tr.tr("%1 updates available").arg(root.pending.length)
@@ -58,24 +79,5 @@ PageBase {
             }
         }
 
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: Tokens.spacing.large
-            spacing: Tokens.spacing.medium
-
-            TextButton {
-                type: TextButton.Tonal
-                text: Tr.tr("Check again")
-                onClicked: {
-                    root.checking = true;
-                    check.running = true;
-                }
-            }
-
-            TextButton {
-                text: Tr.tr("Update now")
-                onClicked: Quickshell.execDetached(["sh", "-c", `exec ${GlobalConfig.general.apps.terminal.join(" ")} -e sh -c 'if command -v omarchy-update >/dev/null; then omarchy-update; elif command -v yay >/dev/null; then yay -Syu; else sudo pacman -Syu; fi; echo; read -p "Done. Press Enter to close" _'`])
-            }
-        }
     }
 }

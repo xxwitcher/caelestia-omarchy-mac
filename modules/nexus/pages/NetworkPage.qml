@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
@@ -13,7 +14,37 @@ import qs.modules.nexus.common
 PageBase {
     id: root
 
+    // DNS (assets/settings/dns.sh): the provider and, for a custom one, its servers
+    property string dnsProvider: "Automatic"
+    property string dnsServers
+    readonly property string dnsScript: `${Quickshell.shellDir}/assets/settings/dns.sh`
+
+    function setDns(provider: string, servers: string): void {
+        dnsSet.command = [dnsScript, "set", provider, servers ?? ""];
+        dnsSet.running = true;
+    }
+
     title: Tr.tr("Network")
+
+    property Process _process1: Process {
+        id: dnsGet
+
+        running: true
+        command: [root.dnsScript]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const [provider, servers] = text.trim().split("\t");
+                root.dnsProvider = provider || "Automatic";
+                root.dnsServers = servers ?? "";
+            }
+        }
+    }
+
+    property Process _process2: Process {
+        id: dnsSet
+
+        onExited: dnsGet.running = true
+    }
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -348,6 +379,55 @@ PageBase {
             onClicked: {
                 root.nState.editingVpnIndex = -1;
                 root.nState.openSubPage(4); // Add/edit provider sub-page
+            }
+        }
+
+        // DNS
+        SectionHeader {
+            text: Tr.tr("DNS")
+        }
+
+        ChoiceRow {
+            first: true
+            last: root.dnsProvider !== "Custom"
+            icon: "dns"
+            label: Tr.tr("DNS servers")
+            options: [
+                {
+                    value: "Automatic",
+                    label: Tr.tr("Automatic (from the network)")
+                },
+                {
+                    value: "Cloudflare",
+                    label: "Cloudflare"
+                },
+                {
+                    value: "Google",
+                    label: "Google"
+                },
+                {
+                    value: "Custom",
+                    label: Tr.tr("Custom…")
+                }
+            ]
+            current: root.dnsProvider
+            onChosen: v => {
+                if (v === "Custom")
+                    root.dnsProvider = "Custom"; // Applied once servers are entered
+                else
+                    root.setDns(v, "");
+            }
+        }
+
+        TextFieldRow {
+            visible: root.dnsProvider === "Custom"
+            last: true
+            label: Tr.tr("Custom servers")
+            placeholderText: "9.9.9.9, 149.112.112.112"
+            value: root.dnsServers
+            onEditingFinished: v => {
+                if (v.trim())
+                    root.setDns("Custom", v.trim());
             }
         }
     }

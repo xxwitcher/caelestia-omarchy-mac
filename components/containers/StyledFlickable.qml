@@ -8,6 +8,12 @@ Flickable {
 
     maximumFlickVelocity: 3000
 
+    // Momentum scrolling for wheels and touchpads
+    Glide {
+        flickable: root
+        horizontal: root.flickableDirection === Flickable.HorizontalFlick
+    }
+
     rebound: Transition {
         onRunningChanged: {
             if (!running && !root.doneFakeFlick) {

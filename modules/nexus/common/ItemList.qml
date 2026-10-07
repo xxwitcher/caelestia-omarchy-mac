@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
+import qs.components.containers
 import qs.services
 
 ConnectedRect {
@@ -63,6 +64,10 @@ ConnectedRect {
 
     ListView {
         id: list
+
+        Glide {
+            flickable: list
+        }
 
         anchors.left: parent.left
         anchors.right: parent.right

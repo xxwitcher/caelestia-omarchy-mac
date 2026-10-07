@@ -6,7 +6,7 @@
 
 _pkgname='caelestia-shell'
 pkgname=caelestia-omarchy-mac
-pkgver=2.5.0.r13.g6f7ce62
+pkgver=2.5.0.r14.g101161f
 pkgrel=1
 pkgdesc='The Caelestia desktop shell, packaged for omarchy-mac'
 arch=('x86_64' 'aarch64')
@@ -56,6 +56,7 @@ depends=(
 )
 optdepends=(
     'fprintd: fingerprint unlock for the lock screen'
+    'mise: install the coding agent picked in Settings > Apps > Agent (install.sh installs it)'
 )
 makedepends=('git' 'cmake' 'ninja' 'qt6-shadertools')
 provides=($_pkgname)

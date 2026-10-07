@@ -75,15 +75,17 @@ PageBase {
             onToggled: GlobalConfig.notifs.openExpanded = checked
         }
 
-        StepperRow {
+        ChoiceRow {
+            readonly property int seconds: Math.round(GlobalConfig.notifs.defaultExpireTimeout / 1000)
+
             label: Tr.tr("Default timeout")
-            // TRANSLATORS: ms is the millisecond unit, leave it untranslated
-            subtext: Tr.tr("Time before a notification dismisses (ms)")
-            value: GlobalConfig.notifs.defaultExpireTimeout
-            from: 1000
-            to: 60000
-            stepSize: 500
-            onMoved: v => GlobalConfig.notifs.defaultExpireTimeout = Math.round(v)
+            subtext: Tr.tr("Time before a notification dismisses")
+            options: [...new Set([3, 5, 8, 10, 15, 20, 30, 45, 60, seconds])].sort((a, b) => a - b).map(s => ({
+                        value: s,
+                        label: Tr.tr("%1 s").arg(s)
+                    }))
+            current: seconds
+            onChosen: v => GlobalConfig.notifs.defaultExpireTimeout = v * 1000
         }
 
         StepperRow {

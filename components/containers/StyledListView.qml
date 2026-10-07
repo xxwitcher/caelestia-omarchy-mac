@@ -8,6 +8,12 @@ ListView {
 
     maximumFlickVelocity: 3000
 
+    // Momentum scrolling for wheels and touchpads
+    Glide {
+        flickable: root
+        horizontal: root.orientation === ListView.Horizontal
+    }
+
     rebound: Transition {
         onRunningChanged: {
             if (!running && !root.doneFakeFlick) {
