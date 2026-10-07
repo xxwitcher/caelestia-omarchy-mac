@@ -37,6 +37,7 @@ ShellRoot {
     }
 
     Shortcuts {}
+    FilePicker {}
     Overview {}
     FloatingControls {}
     BatteryMonitor {}

@@ -1,7 +1,9 @@
+import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
+import qs.components.controls
 import qs.services
 
 StyledRect {
@@ -23,13 +25,26 @@ StyledRect {
         spacing: Tokens.spacing.small
 
         StyledText {
-            text: Tr.trCtx("Filter:", "file filter")
+            text: root.dialog.mode === "save" ? Tr.trCtx("Name:", "file name to save as") : root.dialog.mode === "directory" ? Tr.trCtx("Folder:", "folder to pick") : Tr.trCtx("Filter:", "file filter")
+        }
+
+        // Saving: the file name
+        StyledTextField {
+            Layout.fillWidth: true
+            Layout.rightMargin: Tokens.spacing.medium
+            visible: root.dialog.mode === "save"
+            verticalPadding: Tokens.padding.small
+            text: root.dialog.fileName
+            focus: visible
+            onTextEdited: root.dialog.fileName = text
+            onAccepted: root.dialog.acceptSelection()
         }
 
         StyledRect {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.rightMargin: Tokens.spacing.medium
+            visible: root.dialog.mode !== "save"
 
             color: Colours.tPalette.m3surfaceContainerHigh
             radius: Tokens.rounding.medium
@@ -38,7 +53,10 @@ StyledRect {
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.medium
 
+                elide: Text.ElideMiddle
                 text: {
+                    if (root.dialog.mode === "directory")
+                        return root.dialog.folderPath;
                     const filters = root.dialog.filters.map(f => `*.${f}`).join(Tr.trCtx(", ", "file filter separator"));
                     // TRANSLATORS: %1 = filter label, %2 = file patterns
                     return Tr.trCtx("%1 (%2)", "file filter label and patterns").arg(root.dialog.filterLabel).arg(filters);
@@ -50,12 +68,12 @@ StyledRect {
             color: Colours.tPalette.m3surfaceContainerHigh
             radius: Tokens.rounding.medium
 
-            implicitWidth: cancelText.implicitWidth + Tokens.padding.medium * 2
-            implicitHeight: cancelText.implicitHeight + Tokens.padding.medium * 2
+            implicitWidth: selectText.implicitWidth + Tokens.padding.medium * 2
+            implicitHeight: selectText.implicitHeight + Tokens.padding.medium * 2
 
             StateLayer {
                 disabled: !root.dialog.selectionValid
-                onClicked: root.dialog.accepted(root.folder.currentItem.modelData.path)
+                onClicked: root.dialog.acceptSelection()
             }
 
             StyledText {
@@ -64,7 +82,7 @@ StyledRect {
                 anchors.centerIn: parent
                 anchors.margins: Tokens.padding.medium
 
-                text: Tr.trCtx("Select", "button")
+                text: root.dialog.nameExists ? Tr.trCtx("Replace", "button: save over an existing file") : root.dialog.acceptLabel
                 color: root.dialog.selectionValid ? Colours.palette.m3onSurface : Colours.palette.m3outline
             }
         }

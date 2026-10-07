@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import Caelestia.Config
 import qs.components
+import qs.components.filedialog
 import qs.services
 import qs.modules.nexus
 import qs.modules.windowinfo
@@ -32,6 +33,10 @@ Item {
 
     property string detachedMode
     property string queuedMode
+    // A FileDialog shown here (detachedMode "file"), and what was showing before it (the settings,
+    // when it was opened from them), which comes back when it's done
+    property var fileDialog: null
+    property string modeBeforeFile
 
     // Dummy object so Tokens attached prop resolves to global config
     // Anim configs are not per-monitor
@@ -61,8 +66,37 @@ Item {
     function close(reason: string): void {
         if (isDetached)
             console.info(`Detached popout (${detachedMode}) closed: ${reason || "unknown"}`);
+        const dialog = detachedMode === "file" ? fileDialog : null;
+        fileDialog = null;
+        modeBeforeFile = "";
         hasCurrent = false;
         detachedMode = "";
+        dialog?.rejected(); // Closing the overlay cancels the pick
+    }
+
+    function showFileDialog(dialog: var): void {
+        if (fileDialog && fileDialog !== dialog)
+            fileDialog.rejected();
+        if (detachedMode !== "file")
+            modeBeforeFile = detachedMode;
+        fileDialog = dialog;
+        setAnims(true);
+        detachedMode = "file";
+        setAnims(false);
+        focus = true;
+    }
+
+    // The dialog picked or was cancelled: back to what was showing before it
+    function closeFileDialog(dialog: var): void {
+        if (fileDialog !== dialog)
+            return;
+        fileDialog = null;
+        if (detachedMode === "file") {
+            detachedMode = modeBeforeFile;
+            if (!detachedMode)
+                hasCurrent = false;
+        }
+        modeBeforeFile = "";
     }
 
     implicitWidth: nonAnimWidth
@@ -105,7 +139,7 @@ Item {
         active: root.isDetached && !regrabbing
         windows: [QsWindow.window]
         onCleared: {
-            if (Hypr.reloading() || detachedHover.hovered) {
+            if (Hypr.reloading() || detachedHover.hovered || fileDialogHover.hovered) {
                 regrabbing = true;
                 Qt.callLater(() => regrabbing = false);
             } else {
@@ -142,6 +176,29 @@ Item {
         sourceComponent: WindowInfo {
             screen: root.screen
             client: Hypr.activeToplevel
+        }
+    }
+
+    Comp {
+        id: fileDialogComp
+
+        shouldBeActive: root.detachedMode === "file"
+        anchors.centerIn: parent
+
+        sourceComponent: StyledClippingRect {
+            radius: Tokens.rounding.extraLarge
+            color: Colours.tPalette.m3surface
+            implicitWidth: Math.min(1000, (QsWindow.window as QsWindow)?.width * 0.8 || 1000)
+            implicitHeight: Math.min(600, (QsWindow.window as QsWindow)?.height * 0.8 || 600)
+
+            DialogContent {
+                anchors.fill: parent
+                loader: root.fileDialog
+            }
+        }
+
+        HoverHandler {
+            id: fileDialogHover
         }
     }
 

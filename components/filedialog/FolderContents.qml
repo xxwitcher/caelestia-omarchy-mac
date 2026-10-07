@@ -20,6 +20,12 @@ Item {
 
     required property var dialog
     readonly property FileEntry currentItem: view.currentItem as FileEntry
+    readonly property string folderPath: folderModel.path
+
+    // Whether this folder has a file or folder of that name (saving over one asks to replace it)
+    function hasName(name: string): bool {
+        return folderModel.entries.some(e => e.name === name);
+    }
 
     StyledRect {
         anchors.fill: parent
@@ -94,20 +100,16 @@ Item {
         currentIndex: -1
         Keys.onEscapePressed: currentIndex = -1
 
-        Keys.onReturnPressed: {
-            if (root.dialog.selectionValid)
-                root.dialog.accepted((currentItem as FileEntry).modelData.path);
-        }
-        Keys.onEnterPressed: {
-            if (root.dialog.selectionValid)
-                root.dialog.accepted((currentItem as FileEntry).modelData.path);
-        }
+        Keys.onReturnPressed: root.dialog.acceptSelection()
+        Keys.onEnterPressed: root.dialog.acceptSelection()
 
         StyledScrollBar.vertical: StyledScrollBar {
             flickable: view
         }
 
         model: FileSystemModel {
+            id: folderModel
+
             path: {
                 if (root.dialog.cwd[0] === "Home")
                     return Paths.home + `/${root.dialog.cwd.slice(1).join("/")}`;
@@ -177,12 +179,20 @@ Item {
         clip: true
 
         StateLayer {
-            onClicked: view.currentIndex = item.index
+            onClicked: {
+                view.currentIndex = item.index;
+                // Saving: a file picked takes its name
+                if (root.dialog.mode === "save" && !item.modelData.isDir)
+                    root.dialog.fileName = item.modelData.name;
+            }
             onDoubleClicked: {
-                if (item.modelData.isDir)
+                if (item.modelData.isDir) {
                     root.dialog.cwd.push(item.modelData.name);
-                else if (root.dialog.selectionValid)
-                    root.dialog.accepted(item.modelData.path);
+                } else if (root.dialog.mode !== "directory") {
+                    if (root.dialog.mode === "save")
+                        root.dialog.fileName = item.modelData.name;
+                    root.dialog.acceptSelection();
+                }
             }
         }
 

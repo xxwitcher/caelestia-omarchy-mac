@@ -72,7 +72,16 @@ if("shell" IN_LIST ENABLE_MODULES)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
 
-    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/scheme-overrides.py DESTINATION "${INSTALL_QSCONFDIR}/assets")
+    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/scheme-overrides.py assets/portal-filechooser.py
+        DESTINATION "${INSTALL_QSCONFDIR}/assets")
+
+    # Caelestia's file picker for every app that asks the desktop for one: an xdg-desktop-portal
+    # FileChooser backend, started by D-Bus (install.sh points the portal's FileChooser at it)
+    file(WRITE "${CMAKE_BINARY_DIR}/org.freedesktop.impl.portal.desktop.caelestia.service"
+        "[D-BUS Service]\nName=org.freedesktop.impl.portal.desktop.caelestia\nExec=/usr/bin/python3 -I /${INSTALL_QSCONFDIR}/assets/portal-filechooser.py\n")
+    install(FILES "${CMAKE_BINARY_DIR}/org.freedesktop.impl.portal.desktop.caelestia.service"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/dbus-1/services")
+    install(FILES assets/caelestia.portal DESTINATION "${CMAKE_INSTALL_DATADIR}/xdg-desktop-portal/portals")
     install(PROGRAMS assets/settings/dns.sh DESTINATION "${INSTALL_QSCONFDIR}/assets/settings")
     install(PROGRAMS assets/agent/launch.sh assets/agent/install.sh assets/agent/usage-update.sh assets/agent/usage-claude.py
         assets/agent/usage-codex.py DESTINATION "${INSTALL_QSCONFDIR}/assets/agent")

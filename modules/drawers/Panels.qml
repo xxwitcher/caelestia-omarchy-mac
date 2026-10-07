@@ -64,6 +64,7 @@ Item {
 
         screenState: root.screenState
         sidebarPanel: sidebar
+        dashboardPanel: dashboard
         osdPanel: osdWrapper
         sessionPanel: sessionWrapper
         utilitiesPanel: utilities

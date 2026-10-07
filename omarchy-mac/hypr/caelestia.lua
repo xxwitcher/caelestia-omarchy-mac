@@ -141,6 +141,16 @@ if style.floatnew == "1" then
   hl.window_rule({ match = { class = ".*" }, float = true })
 end
 
+-- File pickers and other dialogs open like Caelestia's settings: centred above everything, the
+-- rest dimmed, no border or shadow. Every dialog the desktop portal shows (whichever app asked),
+-- and the usual Open/Save dialogs apps draw themselves, by title. modules/windowcontrols in the
+-- shell matches the same windows (no window buttons on them).
+local dialog_class = "^(xdg-desktop-portal-gtk)$"
+local dialog_title = "^(Open (File|Files|Folder)|Select (a File|Folder|Directory)|Save (File|As|Image|Image As)|Choose (a )?File)(…|\\.\\.\\.)?$"
+for _, match in ipairs({ { class = dialog_class }, { title = dialog_title } }) do
+  hl.window_rule({ match = match, float = true, center = true, size = { 900, 600 }, border_size = 0, no_shadow = true, pin = true, dim_around = true })
+end
+
 if style.fade == "1" then
   hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "default", style = "slidefade 20%" })
 end
@@ -263,6 +273,8 @@ if style.titlebars ~= "0" then
       } } })
       hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
       hl.window_rule({ match = { fullscreen = true }, ["hyprbars:no_bar"] = true })
+      hl.window_rule({ match = { class = dialog_class }, ["hyprbars:no_bar"] = true })
+      hl.window_rule({ match = { title = dialog_title }, ["hyprbars:no_bar"] = true })
     end
   end)
 end

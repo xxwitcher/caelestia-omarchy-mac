@@ -1,12 +1,14 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Caelestia.I18n
 import qs.components
 import qs.services
 
+// A file picker. It opens like the settings: in the overlay over everything on the focused screen,
+// closed by clicking away (the popouts Wrapper shows it); in a window of its own only when there's
+// no overlay to show it in.
 LazyLoader {
     id: loader
 
@@ -14,41 +16,40 @@ LazyLoader {
     property string filterLabel: Tr.tr("All files")
     property list<string> filters: ["*"]
     property string title: Tr.tr("Select a file")
+    // "open" (a file), "directory" (a folder) or "save" (a file name in a folder)
+    property string mode: "open"
+    property string currentName // The file name to start with when saving
+    property string acceptLabel // The accept button's text (Select, or Save when saving, by default)
+    property var overlay: null // The popouts Wrapper showing it
 
     signal accepted(path: string)
     signal rejected
 
     function open(): void {
-        activeAsync = true;
+        const popouts = ShellState.componentsForActive()?.panels?.popouts;
+        if (popouts) {
+            overlay = popouts;
+            popouts.showFileDialog(loader);
+        } else {
+            activeAsync = true;
+        }
     }
 
     function close(): void {
         rejected();
     }
 
-    onAccepted: activeAsync = false
-    onRejected: activeAsync = false
+    function finish(): void {
+        const shownIn = overlay;
+        overlay = null;
+        shownIn?.closeFileDialog(loader);
+        activeAsync = false;
+    }
+
+    onAccepted: finish()
+    onRejected: finish()
 
     FloatingWindow {
-        id: root
-
-        property list<string> cwd: loader.cwd
-        property string filterLabel: loader.filterLabel
-        property list<string> filters: loader.filters
-
-        readonly property bool selectionValid: {
-            const file = folderContents.currentItem?.modelData;
-            return (file && !file.isDir && (filters.includes("*") || filters.some(filter => filter.toLowerCase() === file.suffix.toLowerCase()))) ?? false;
-        }
-
-        function accepted(path: string): void {
-            loader.accepted(path);
-        }
-
-        function rejected(): void {
-            loader.rejected();
-        }
-
         implicitWidth: 1000
         implicitHeight: 600
         minimumSize.width: 400
@@ -59,44 +60,12 @@ LazyLoader {
 
         onVisibleChanged: {
             if (!visible)
-                rejected();
+                loader.rejected();
         }
 
-        RowLayout {
+        DialogContent {
             anchors.fill: parent
-
-            spacing: 0
-
-            Sidebar {
-                Layout.fillHeight: true
-                dialog: root
-            }
-
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                spacing: 0
-
-                HeaderBar {
-                    Layout.fillWidth: true
-                    dialog: root
-                }
-
-                FolderContents {
-                    id: folderContents
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    dialog: root
-                }
-
-                DialogButtons {
-                    Layout.fillWidth: true
-                    dialog: root
-                    folder: folderContents
-                }
-            }
+            loader: loader
         }
 
         Behavior on color {

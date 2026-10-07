@@ -9,7 +9,7 @@ pkgbuilds="$here/pkgbuilds"
 sudo pacman -S --needed vulkan-headers cli11 ninja cmake git aubio libqalculate \
   ttf-material-symbols-variable ttf-cascadia-code-nerd papirus-icon-theme swappy fish dart-sass cliphist fuzzel \
   python-build python-installer python-hatch python-hatch-vcs pybind11 meson autoconf-archive qmltermwidget wf-recorder \
-  hyprsunset
+  hyprsunset adw-gtk-theme python-gobject
 
 build_install() {
   local pkg="$1"
@@ -105,12 +105,29 @@ if [[ -d /usr/share/omarchy ]]; then
   "$here/install-hypr.sh"
 else
   sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome gnome-keyring \
-    adw-gtk-theme foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
+    foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
   "$here/install-hypr.sh" --standalone
 fi
 
 # Instructions and rules for coding agents (the Agent tab, SUPER + A), written for this system
 "$here/install-agent-skills.sh" || echo "warning: the agent skills could not be installed (see above)" >&2
+
+# File pickers of apps that ask the desktop portal for one (browsers, Electron apps, Flatpaks, GTK4
+# apps) are Caelestia's (assets/portal-filechooser.py): point the portal's FileChooser at it in the
+# user's portal config, keeping the rest of what's preferred there
+portal_dir="${XDG_CONFIG_HOME:-$HOME/.config}/xdg-desktop-portal"
+portal_conf="$portal_dir/hyprland-portals.conf"
+[[ -f $portal_conf ]] || portal_conf="$portal_dir/portals.conf"
+mkdir -p "$portal_dir"
+[[ -f $portal_conf ]] || printf '[preferred]\ndefault=hyprland;gtk\n' >"$portal_conf"
+grep -q '^\[preferred\]' "$portal_conf" || printf '\n[preferred]\n' >>"$portal_conf"
+sed -i '/^org\.freedesktop\.impl\.portal\.FileChooser=/d' "$portal_conf"
+sed -i '/^\[preferred\]/a org.freedesktop.impl.portal.FileChooser=caelestia' "$portal_conf"
+# The portal reads its config at startup; the GTK one (still the fallback, and its other dialogs)
+# its theme (adw-gtk3-dark, installed above)
+for unit in xdg-desktop-portal-gtk.service xdg-desktop-portal.service; do
+  systemctl --user is-active --quiet "$unit" && systemctl --user restart "$unit" || true
+done
 
 # Title bars on floating windows need the hyprbars plugin built for this Hyprland
 "$here/titlebars/build-hyprbars" || echo "hyprbars could not be built; floating windows get no drag strip"

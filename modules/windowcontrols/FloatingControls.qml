@@ -165,6 +165,8 @@ Scope {
     for (var i = 0; i < list.length; i++) {
       var c = list[i]
       if (!c.floating || c.fullscreen || !c.workspace || c.workspace.id < 0 || shown[c.monitor] !== c.workspace.id) continue
+      // Dialogs opened like the settings (hypr-caelestia.lua's dialog rules) get no buttons
+      if (/^xdg-desktop-portal-gtk$/.test(c.class) || /^(Open (File|Files|Folder)|Select (a File|Folder|Directory)|Save (File|As|Image|Image As)|Choose (a )?File)(…|\.\.\.)?$/.test(c.title)) continue
       info[addressKey(c.address)] = { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1], history: c.focusHistoryID }
     }
     var next = JSON.stringify(info)
