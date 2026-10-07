@@ -10,6 +10,11 @@ Singleton {
     readonly property alias running: props.running
     readonly property alias paused: props.paused
     readonly property alias elapsed: props.elapsed
+    // The recorder `caelestia record` runs, picked as omarchy-mac's caelestia-cli picks it:
+    // wf-recorder on Apple Silicon (gpu-screen-recorder can't capture there), else gpu-screen-recorder
+    readonly property string recorder: deviceTree.text().includes("apple") ? "wf-recorder" : "gpu-screen-recorder"
+    // wf-recorder can't pause
+    readonly property bool canPause: recorder === "gpu-screen-recorder"
     property int refCount: 0
     property bool needsStart
     property list<string> startArgs
@@ -28,6 +33,8 @@ Singleton {
     }
 
     function togglePause(): void {
+        if (!canPause)
+            return;
         needsPause = true;
         checkProc.running = true;
     }
@@ -45,8 +52,7 @@ Singleton {
     Process {
         id: checkProc
 
-        running: true
-        command: ["pidof", "gpu-screen-recorder"]
+        command: ["pidof", root.recorder]
         onExited: code => { // qmllint disable signal-handler-parameters
             const running = code === 0;
 
@@ -83,6 +89,16 @@ Singleton {
         // region captures, and waits for the recorder to finalise the file when
         // stopping. Reconcile once it has actually finished.
         onExited: checkProc.running = true // qmllint disable signal-handler-parameters
+    }
+
+    FileView {
+        id: deviceTree
+
+        path: "/proc/device-tree/compatible"
+        printErrors: false
+        // The first check waits until it's known which recorder to look for
+        onLoaded: checkProc.running = true
+        onLoadFailed: checkProc.running = true
     }
 
     // Only poll while something is showing the state, i.e. the utilities drawer is open

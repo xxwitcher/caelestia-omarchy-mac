@@ -77,6 +77,9 @@ if("shell" IN_LIST ENABLE_MODULES)
     install(PROGRAMS assets/agent/launch.sh assets/agent/install.sh assets/agent/usage-update.sh assets/agent/usage-claude.py
         assets/agent/usage-codex.py DESTINATION "${INSTALL_QSCONFDIR}/assets/agent")
 
+    # Settings as an app: the dock shows Caelestia's windows as this entry, and launches it to reopen them
+    install(FILES assets/caelestia-settings.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+
     file(READ shell.qml SHELL_QML)
     string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")
     file(WRITE "${CMAKE_BINARY_DIR}/qml/shell.qml" "${SHELL_QML}")

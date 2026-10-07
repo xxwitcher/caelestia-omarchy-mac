@@ -15,6 +15,9 @@ Singleton {
     readonly property bool showAppsButton: adapter.showAppsButton
     // Desktop ids that open at login (~/.config/autostart)
     property list<string> autostart: []
+    // Caelestia's own windows (Settings and its file picker) carry Quickshell's app id, whose desktop
+    // entry launches nothing; in the dock they're Caelestia Settings, which opens Settings again
+    readonly property string settingsId: "caelestia-settings"
 
     function setShowAppsButton(show: bool): void {
         adapter.showAppsButton = show;
@@ -48,7 +51,10 @@ Singleton {
     }
 
     function entryForToplevel(toplevel: var): var {
-        const cls = toplevel?.lastIpcObject?.class ?? "";
+        const ipc = toplevel?.lastIpcObject;
+        if (ipc?.pid === Quickshell.processId)
+            return DesktopEntries.byId(settingsId);
+        const cls = ipc?.class ?? "";
         return cls ? DesktopEntries.heuristicLookup(cls) : null;
     }
 
@@ -161,6 +167,11 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
+        onLoaded: {
+            // Settings pinned while its windows went by Quickshell's own entry
+            if (adapter.pinned.includes(Quickshell.appId))
+                adapter.pinned = [...new Set(adapter.pinned.map(p => p === Quickshell.appId ? root.settingsId : p))];
+        }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
                 writeAdapter();

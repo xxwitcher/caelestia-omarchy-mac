@@ -14,11 +14,6 @@ import qs.modules.launcher.services
 GridView {
     id: root
 
-    // Momentum scrolling for wheels and touchpads
-    Glide {
-        flickable: root
-    }
-
     required property var search
     required property ScreenState screenState
     readonly property int columns: 6
@@ -35,6 +30,9 @@ GridView {
     implicitHeight: cellHeight * rows
     keyNavigationWraps: true
     highlightFollowsCurrentItem: false
+    // Keeps every app's tile around once made (as the settings pages keep their rows), so a glide
+    // never stalls building tiles and loading their icons as rows scroll into view
+    cacheBuffer: 100000
 
     highlight: StyledRect {
         radius: Tokens.rounding.large
@@ -77,6 +75,7 @@ GridView {
             anchors.top: parent.top
             anchors.topMargin: Tokens.padding.medium
             implicitSize: Math.round(root.cellWidth * 0.5)
+            asynchronous: true
             source: Quickshell.iconPath(app.modelData.icon, "image-missing")
         }
 
@@ -91,5 +90,10 @@ GridView {
             text: app.modelData.name
             font: Tokens.font.label.medium
         }
+    }
+
+    // Momentum scrolling for wheels and touchpads
+    Glide {
+        flickable: root
     }
 }

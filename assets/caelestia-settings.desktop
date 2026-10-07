@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Caelestia Settings
+GenericName=Settings
+Comment=Configure the Caelestia shell
+Icon=preferences-system
+Exec=caelestia-qs -c caelestia ipc call nexus open
+Categories=Settings;
+Keywords=nexus;caelestia;preferences;
