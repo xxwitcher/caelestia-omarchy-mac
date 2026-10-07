@@ -2,68 +2,44 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Io
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.utils
 import qs.modules.nexus.common
 
-// Windows and Window border, as in the witchers-tweaks settings app. Saved to
-// window-style.conf (read by hypr-caelestia.lua), then Hyprland reloads.
+// Windows and Window border, as in the witchers-tweaks settings app (WindowStyle: window-style.conf,
+// read by hypr-caelestia.lua). The border follows the colour scheme until a colour is picked here.
 PageBase {
     id: root
 
-    readonly property var defaults: ({
-            gradient: "1",
-            colors: "c4b5fd a855f7 da70d6",
-            inactive: "5b3a7a",
-            fade: "1",
-            swipe: "1",
-            titlebars: "1",
-            borderresize: "1",
-            roundingon: "1",
-            rounding: "60",
-            gaps: "1",
-            columns: "0",
-            floatnew: "0"
-        })
-    property var style: Object.assign({}, defaults)
-    readonly property list<string> gradientColours: style.colors.split(/\s+/).filter(c => /^[0-9a-fA-F]{6}$/.test(c)).map(c => `#${c}`)
+    readonly property var style: WindowStyle.style
+    readonly property bool themeBorder: style.bordertheme !== "0"
+    // The border's colours as they are: the scheme's while it follows the scheme
+    readonly property list<string> gradientColours: themeBorder ? [Colours.palette.m3primary, Colours.palette.m3secondary, Colours.palette.m3tertiary].map(c => String(c)) : style.colors.split(/\s+/).filter(c => /^[0-9a-fA-F]{6}$/.test(c)).map(c => `#${c}`)
+    readonly property string inactiveColour: themeBorder ? String(Colours.palette.m3outlineVariant) : `#${style.inactive}`
 
     function save(changes: var): void {
-        style = Object.assign({}, style, changes);
-        file.setText(Object.entries(style).map(([k, v]) => `${k}=${v}`).join("\n") + "\n");
-        Quickshell.execDetached(["hyprctl", "reload"]);
+        WindowStyle.save(changes);
     }
 
-    function setGradient(i: int, c: color): void {
-        const cols = gradientColours.map(x => x.slice(1));
-        cols[i] = String(c).slice(1, 7);
+    // A colour picked by hand: the border keeps the colours shown and stops following the scheme
+    function setBorder(colours: list<string>, inactive: string): void {
         save({
-            colors: cols.join(" ")
+            colors: colours.map(c => c.slice(1, 7)).join(" "),
+            inactive: inactive.slice(1, 7),
+            bordertheme: "0"
         });
     }
 
-    title: Tr.tr("Window style")
-
-    property FileView _file: FileView {
-        id: file
-
-        path: `${Paths.config}/window-style.conf`
-        onLoaded: {
-            const s = Object.assign({}, root.defaults);
-            for (const line of text().split("\n")) {
-                const m = line.match(/^\s*(\w+)\s*=\s*(.*?)\s*$/);
-                if (m)
-                    s[m[1]] = m[2];
-            }
-            root.style = s;
-        }
+    function setGradient(i: int, c: color): void {
+        const cols = [...gradientColours];
+        cols[i] = String(c);
+        setBorder(cols, inactiveColour);
     }
+
+    title: Tr.tr("Window style")
 
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -99,11 +75,42 @@ PageBase {
                 })
         }
 
-        ToggleRow {
-            text: Tr.tr("Gaps between windows")
-            checked: root.style.gaps !== "0"
-            onToggled: root.save({
-                    gaps: checked ? "1" : "0"
+        RangeRow {
+            icon: "border_outer"
+            label: Tr.tr("Border size")
+            from: 0
+            to: 10
+            step: 1
+            current: Number(root.style.bordersize)
+            format: v => `${Math.round(v)} px`
+            onCommitted: v => root.save({
+                    bordersize: String(Math.round(v))
+                })
+        }
+
+        RangeRow {
+            icon: "border_inner"
+            label: Tr.tr("Gaps in")
+            from: 0
+            to: 30
+            step: 1
+            current: Number(root.style.gapsin)
+            format: v => `${Math.round(v)} px`
+            onCommitted: v => root.save({
+                    gapsin: String(Math.round(v))
+                })
+        }
+
+        RangeRow {
+            icon: "padding"
+            label: Tr.tr("Gaps out")
+            from: 0
+            to: 60
+            step: 1
+            current: Number(root.style.gapsout)
+            format: v => `${Math.round(v)} px`
+            onCommitted: v => root.save({
+                    gapsout: String(Math.round(v))
                 })
         }
 
@@ -170,6 +177,15 @@ PageBase {
                 })
         }
 
+        ToggleRow {
+            visible: root.style.gradient === "1"
+            text: Tr.tr("Match the theme colours")
+            checked: root.themeBorder
+            onToggled: root.save({
+                    bordertheme: checked ? "1" : "0"
+                })
+        }
+
         ColourRow {
             visible: root.style.gradient === "1"
             label: Tr.tr("Gradient colors")
@@ -192,10 +208,8 @@ PageBase {
             label: Tr.tr("Inactive windows")
 
             ColorWell {
-                color: `#${root.style.inactive}`
-                onPicked: c => root.save({
-                        inactive: String(c).slice(1, 7)
-                    })
+                color: root.inactiveColour
+                onPicked: c => root.setBorder(root.gradientColours, String(c))
             }
         }
 
@@ -205,8 +219,9 @@ PageBase {
             icon: "restart_alt"
             text: Tr.tr("Default colors")
             onClicked: root.save({
-                    colors: root.defaults.colors,
-                    inactive: root.defaults.inactive
+                    colors: WindowStyle.defaults.colors,
+                    inactive: WindowStyle.defaults.inactive,
+                    bordertheme: "0"
                 })
         }
     }

@@ -90,6 +90,20 @@ ColumnLayout {
         }
     }
 
+    // Opens the dock popout and keeps it open, for an app being dragged to it (from the app drawer)
+    function openDock(): void {
+        for (let i = 0; i < repeater.count; i++) {
+            const ch = repeater.itemAt(i) as EntryWrapper;
+            if (ch?.entryId === "dock") {
+                popouts.currentName = "dock";
+                popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
+                popouts.hasCurrent = true;
+                popouts.held = true;
+                return;
+            }
+        }
+    }
+
     function handleWheel(y: real, angleDelta: point): void {
         const ch = childAt(width / 2, y) as EntryWrapper;
         if (ch?.entryId === "workspaces" && Config.bar.scrollActions.workspaces) {
@@ -117,6 +131,20 @@ ColumnLayout {
     }
 
     spacing: Tokens.spacing.medium
+
+    Connections {
+        function onDragStarted(window: var): void {
+            if (window === QsWindow.window)
+                root.openDock();
+        }
+
+        function onDragEnded(): void {
+            if (root.popouts.currentName === "dock")
+                root.popouts.held = false;
+        }
+
+        target: Dock
+    }
 
     Repeater {
         id: repeater

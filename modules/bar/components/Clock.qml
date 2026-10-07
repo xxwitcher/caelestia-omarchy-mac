@@ -10,9 +10,10 @@ import qs.services
 StyledRect {
     id: root
 
-    readonly property color colour: Colours.palette.m3tertiary
+    // The same colour as the status icons, and a medium weight so the digits read as clearly
+    readonly property color colour: Colours.palette.m3secondary
     readonly property int padding: Config.bar.clock.background ? Tokens.padding.medium : Tokens.padding.extraSmall
-    readonly property var font: Tokens.font.body.builders.small.scale(1.1)
+    readonly property var font: Tokens.font.body.builders.small.scale(1.1).weight(Font.Medium)
 
     function fontFor(text: string, metricWidth: int): font {
         // We don't count seconds for the max width because it changes too often
@@ -138,7 +139,7 @@ StyledRect {
 
             sourceComponent: StyledText {
                 text: Time.amPmStr.toLowerCase()
-                font: Tokens.font.body.builders.small.scale(0.9).build()
+                font: Tokens.font.body.builders.small.scale(0.9).weight(Font.Medium).build()
                 color: root.colour
             }
         }

@@ -57,7 +57,10 @@ Item {
         focus = true;
     }
 
-    function close(): void {
+    // reason: what closed it, logged while the settings overlay is open (to find what closes it)
+    function close(reason: string): void {
+        if (isDetached)
+            console.info(`Detached popout (${detachedMode}) closed: ${reason || "unknown"}`);
         hasCurrent = false;
         detachedMode = "";
     }
@@ -75,7 +78,7 @@ Item {
                 return;
             }
         }
-        close();
+        close("escape");
     }
 
     Keys.onPressed: event => {
@@ -92,9 +95,23 @@ Item {
     }
 
     HyprlandFocusGrab {
-        active: root.isDetached
+        id: detachedGrab
+
+        // Briefly off to take the grab again when it's dropped without the user clicking away: after
+        // a reload the shell asked for (Window style changes), or while the pointer is on the
+        // overlay itself (clicking its colour picker drops it)
+        property bool regrabbing
+
+        active: root.isDetached && !regrabbing
         windows: [QsWindow.window]
-        onCleared: root.close()
+        onCleared: {
+            if (Hypr.reloading() || detachedHover.hovered) {
+                regrabbing = true;
+                Qt.callLater(() => regrabbing = false);
+            } else {
+                root.close("focus grab cleared");
+            }
+        }
     }
 
     Binding {
@@ -145,9 +162,15 @@ Item {
                 anchors.fill: parent
                 nState.screen: root.screen
                 nState.animatingContainer: nexus.opacity < 1
-                nState.currentPageIdx: ["appearance", "network", "bluetooth", "audio"].indexOf(root.queuedMode)
-                onClose: root.close()
+                // The page whose id is the mode ("bluetooth", "audio"...), else the first
+                nState.currentPageIdx: Math.max(0, PageRegistry.pages.findIndex(p => p.id === root.queuedMode))
+                onClose: root.close("closed from settings")
+                Component.onDestruction: console.info(`Detached settings destroyed (detachedMode "${root.detachedMode}")`)
             }
+        }
+
+        HoverHandler {
+            id: detachedHover
         }
     }
 

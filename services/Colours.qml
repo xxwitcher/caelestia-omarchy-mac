@@ -28,6 +28,75 @@ Singleton {
     property bool cooldownPending
     property real lastBaseTransparency
 
+    // Colours picked on the Colours page, kept per scheme ("name flavour mode": { colour: hex }):
+    // scheme colours, which assets/scheme-overrides.py puts on the scheme to theme everything with,
+    // and shell:<option> ones, which only the shell uses
+    readonly property var colourOverrides: overridesAdapter.overrides
+    readonly property string schemeKey: `${scheme} ${flavour} ${currentLight ? "light" : "dark"}`
+    readonly property var schemeOverrides: colourOverrides[schemeKey] ?? ({})
+    // Themes saved from picked colours: { name, scheme, flavour, mode, colours } (colours: the
+    // overrides on that scheme). The CLI only knows its own schemes, so picking one switches to
+    // its scheme and puts its colours on as the overrides.
+    readonly property var customThemes: overridesAdapter.themes
+    // The current scheme's colours by name, as scheme.json has them (overrides included)
+    property var schemeColours: ({})
+    property bool overridesPending
+    // The Colours page's options. Each sets a family of scheme colours from one picked colour
+    // (shiftColour keeps the shades apart and in order) and the text on them (on: text key ->
+    // the key it sits on). Window background
+    // and text go to apps (terminals, GTK, Qt) and the shell's cards, popups and Settings; the
+    // shell-only panels option keeps the taskbar and the panel frame its own colour.
+    readonly property var colourOptions: [
+        {
+            id: "accent",
+            base: "primary",
+            keys: ["primary", "primaryContainer", "inversePrimary", "surfaceTint", "primaryFixed", "primaryFixedDim", "primary_paletteKeyColor"],
+            on: {
+                onPrimary: "primary",
+                onPrimaryContainer: "primaryContainer"
+            }
+        },
+        {
+            id: "highlight",
+            base: "secondary",
+            keys: ["secondary", "secondaryContainer", "secondaryFixed", "secondaryFixedDim", "secondary_paletteKeyColor"],
+            on: {
+                onSecondary: "secondary",
+                onSecondaryContainer: "secondaryContainer"
+            }
+        },
+        {
+            id: "tertiary",
+            base: "tertiary",
+            keys: ["tertiary", "tertiaryContainer", "tertiaryFixed", "tertiaryFixedDim", "tertiary_paletteKeyColor"],
+            on: {
+                onTertiary: "tertiary",
+                onTertiaryContainer: "tertiaryContainer"
+            }
+        },
+        {
+            id: "outline",
+            base: "outline",
+            keys: ["outline", "outlineVariant"]
+        },
+        {
+            id: "panels",
+            shell: true,
+            base: "surface",
+            keys: ["surface", "background", "surfaceDim"]
+        },
+        {
+            id: "windows",
+            base: "surface",
+            keys: ["surface", "background", "surfaceDim", "surfaceBright", "surfaceContainerLowest", "surfaceContainerLow", "surfaceContainer", "surfaceContainerHigh", "surfaceContainerHighest", "surfaceVariant"]
+        },
+        {
+            id: "windowText",
+            base: "onSurface",
+            keys: ["onSurface", "onBackground", "onSurfaceVariant"]
+        }
+    ]
+
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)
             return 0;
@@ -76,6 +145,168 @@ Singleton {
             if (colours.hasOwnProperty(propName))
                 colours[propName] = `#${colour}`;
         }
+
+        if (!isPreview) {
+            schemeColours = scheme.colours;
+            applyShellColours();
+            checkOverrides();
+            updateThemeBorder();
+        }
+    }
+
+    // c moved the way from moved to to: to's hue and saturation, and c's lightness relative to
+    // from's (as a share of the room below it when darker, above it when lighter), so a colour
+    // darker than from stays darker than to, without running into black or white
+    function shiftColour(c: color, from: color, to: color): color {
+        const cl = c.hslLightness, fl = from.hslLightness, tl = to.hslLightness;
+        const l = cl <= fl ? (fl > 0 ? tl * cl / fl : tl) : (fl < 1 ? tl + (1 - tl) * (cl - fl) / (1 - fl) : tl);
+        return Qt.hsla(Math.max(0, to.hslHue), to.hslSaturation, Math.max(0, Math.min(1, l)), 1);
+    }
+
+    function hexOf(c: color): string {
+        return String(c).slice(-6).toLowerCase();
+    }
+
+    // An option's colour as it is now
+    function optionColour(id: string): color {
+        const opt = colourOptions.find(o => o.id === id);
+        return opt.shell ? current[`m3${opt.base}`] : `#${schemeColours[opt.base] ?? "000000"}`;
+    }
+
+    function optionChanged(id: string): bool {
+        const opt = colourOptions.find(o => o.id === id);
+        return opt.shell ? `shell:${id}` in schemeOverrides : opt.keys.some(k => k in schemeOverrides);
+    }
+
+    // The shell options on the shell's palette, over the scheme's colours
+    function applyShellColours(): void {
+        for (const opt of colourOptions.filter(o => o.shell)) {
+            const picked = schemeOverrides[`shell:${opt.id}`];
+            const base = schemeColours[opt.base];
+            for (const key of opt.keys) {
+                const own = schemeColours[key];
+                if (own)
+                    current[`m3${key}`] = picked && base ? shiftColour(`#${own}`, `#${base}`, `#${picked}`) : `#${own}`;
+            }
+        }
+    }
+
+    function setColourOption(id: string, c: color): void {
+        const opt = colourOptions.find(o => o.id === id);
+        const picked = Object.assign({}, schemeOverrides);
+        if (opt.shell) {
+            picked[`shell:${id}`] = hexOf(c);
+        } else {
+            const base = `#${schemeColours[opt.base]}`;
+            for (const key of opt.keys)
+                if (schemeColours[key])
+                    picked[key] = hexOf(shiftColour(`#${schemeColours[key]}`, base, c));
+            // Text on each recoloured colour, light or dark to stay readable on it
+            for (const [key, under] of Object.entries(opt.on ?? {}))
+                if (picked[under])
+                    picked[key] = hexOf(on(`#${picked[under]}`));
+            // Windows changing leave the taskbar and panels as they are
+            if (id === "windows" && !picked["shell:panels"])
+                picked["shell:panels"] = hexOf(current.m3surface);
+        }
+        const all = Object.assign({}, overridesAdapter.overrides);
+        all[schemeKey] = picked;
+        saveOverrides(all);
+    }
+
+    function resetColourOption(id: string): void {
+        const opt = colourOptions.find(o => o.id === id);
+        const picked = Object.assign({}, schemeOverrides);
+        for (const key of opt.shell ? [`shell:${id}`] : [...opt.keys, ...Object.keys(opt.on ?? {})])
+            delete picked[key];
+        const all = Object.assign({}, overridesAdapter.overrides);
+        if (Object.keys(picked).length > 0)
+            all[schemeKey] = picked;
+        else
+            delete all[schemeKey];
+        saveOverrides(all);
+    }
+
+    // The window border's colours from the scheme (theme-border.conf, which hypr-caelestia.lua uses
+    // while Settings > Window style follows the theme). They go to Hyprland live: a reload would
+    // close the settings they were picked in.
+    function updateThemeBorder(): void {
+        const c = schemeColours;
+        if (!c.primary || !c.secondary || !c.tertiary || !c.outlineVariant)
+            return;
+        const colors = `${c.primary} ${c.secondary} ${c.tertiary}`;
+        const conf = `colors=${colors}\ninactive=${c.outlineVariant}\n`;
+        if (themeBorderFile.text() === conf)
+            return;
+        themeBorderFile.setText(conf);
+        if (WindowStyle.style.gradient !== "0" && WindowStyle.style.bordertheme !== "0")
+            Quickshell.execDetached(["hyprctl", "eval", `if _G.caelestia_set_border then _G.caelestia_set_border("${colors}", "${c.outlineVariant}") end`]);
+    }
+
+    // A scheme switch brings the scheme's own colours back: put this scheme's picked ones on again
+    function checkOverrides(): void {
+        const picked = schemeOverrides;
+        if (Object.keys(picked).some(n => n in schemeColours && schemeColours[n].toLowerCase() !== picked[n].toLowerCase()))
+            applyOverrides();
+    }
+
+    function saveCustomTheme(name: string): void {
+        const themes = customThemes.filter(t => t.name !== name);
+        themes.push({
+            name,
+            scheme,
+            flavour,
+            mode: currentLight ? "light" : "dark",
+            colours: Object.assign({}, schemeOverrides)
+        });
+        overridesAdapter.themes = themes;
+        overridesFile.writeAdapter();
+    }
+
+    function deleteCustomTheme(name: string): void {
+        overridesAdapter.themes = customThemes.filter(t => t.name !== name);
+        overridesFile.writeAdapter();
+    }
+
+    function isCustomThemeCurrent(theme: var): bool {
+        if (`${theme.scheme} ${theme.flavour} ${theme.mode}` !== schemeKey)
+            return false;
+        const a = schemeOverrides, b = theme.colours ?? {};
+        return Object.keys(a).length === Object.keys(b).length && Object.keys(b).every(k => a[k] === b[k]);
+    }
+
+    function applyCustomTheme(theme: var): void {
+        const key = `${theme.scheme} ${theme.flavour} ${theme.mode}`;
+        const all = Object.assign({}, overridesAdapter.overrides);
+        all[key] = Object.assign({}, theme.colours ?? {});
+        if (key === schemeKey) {
+            saveOverrides(all);
+            return;
+        }
+        // The scheme switch loads it, and checkOverrides puts these colours on
+        overridesAdapter.overrides = all;
+        overridesFile.writeAdapter();
+        Quickshell.execDetached(["caelestia", "scheme", "set", "-n", theme.scheme, "-f", theme.flavour, "-m", theme.mode]);
+    }
+
+    function resetOverrides(): void {
+        const all = Object.assign({}, overridesAdapter.overrides);
+        delete all[schemeKey];
+        saveOverrides(all);
+    }
+
+    function saveOverrides(all: var): void {
+        overridesAdapter.overrides = all;
+        overridesFile.writeAdapter();
+        applyShellColours();
+        applyOverrides();
+    }
+
+    function applyOverrides(): void {
+        if (overridesProc.running)
+            overridesPending = true;
+        else
+            overridesProc.running = true;
     }
 
     function setMode(mode: string): void {
@@ -118,6 +349,51 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onLoaded: root.load(text(), false)
+    }
+
+    FileView {
+        id: overridesFile
+
+        path: `${Paths.config}/colour-overrides.json`
+        blockWrites: true
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            root.applyShellColours();
+            root.checkOverrides();
+        }
+        onLoadFailed: err => {
+            if (err === FileViewError.FileNotFound)
+                writeAdapter();
+        }
+
+        JsonAdapter {
+            id: overridesAdapter
+
+            property var overrides: ({})
+            property var themes: []
+        }
+    }
+
+    FileView {
+        id: themeBorderFile
+
+        path: `${Paths.config}/theme-border.conf`
+        blockLoading: true
+        blockWrites: true
+        printErrors: false
+    }
+
+    Process {
+        id: overridesProc
+
+        command: ["python3", "-I", `${Quickshell.shellDir}/assets/scheme-overrides.py`]
+        onExited: {
+            if (root.overridesPending) {
+                root.overridesPending = false;
+                running = true;
+            }
+        }
     }
 
     ImageAnalyser {

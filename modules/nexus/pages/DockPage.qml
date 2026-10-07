@@ -10,7 +10,8 @@ import qs.components.controls
 import qs.services
 import qs.modules.nexus.common
 
-// Dock: show/hide it in the taskbar, and manage pinned apps (unpin, reorder)
+// Dock: show/hide it in the taskbar and its apps button, Settings and Trash, and manage pinned
+// apps (unpin, reorder; the dock itself also rearranges them by dragging)
 PageBase {
     id: root
 
@@ -37,11 +38,23 @@ PageBase {
         }
 
         ToggleRow {
-            last: true
             text: Tr.tr("Show the apps button in the dock")
             subtext: Tr.tr("Opens the app launcher")
             checked: Dock.showAppsButton
             onToggled: Dock.setShowAppsButton(checked)
+        }
+
+        ToggleRow {
+            text: Tr.tr("Show Settings in the dock")
+            checked: Dock.showSettings
+            onToggled: Dock.setShowSettings(checked)
+        }
+
+        ToggleRow {
+            last: true
+            text: Tr.tr("Show the Trash in the dock")
+            checked: Dock.showTrash
+            onToggled: Dock.setShowTrash(checked)
         }
 
         SectionHeader {

@@ -135,6 +135,17 @@ Singleton {
         onPressed: root.active?.stop()
     }
 
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
+        name: "mediaSwitch"
+        description: "Switch to the next media player"
+        onPressed: {
+            if (root.list.length > 1)
+                root.manualActive = root.list[(root.list.indexOf(root.active) + 1) % root.list.length];
+        }
+    }
+
     IpcHandler {
         function getActive(prop: string): string {
             const active = root.active;

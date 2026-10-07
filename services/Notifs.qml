@@ -38,6 +38,29 @@ Singleton {
         return true;
     }
 
+    // Caelestia's own messages (battery, charger, do not disturb, VPN...) come as toasts; they show
+    // as notifications instead, popping up top right and kept in the notification panel like any other
+    function takeToasts(): void {
+        const toasts = [];
+        for (let i = 0; i < Toaster.toasts.length; i++)
+            if (!Toaster.toasts[i].closed)
+                toasts.push(Toaster.toasts[i]);
+
+        for (const toast of toasts.reverse()) {
+            const comp = notifComp.createObject(root, {
+                popup: root.shouldShowPopup(),
+                summary: toast.title,
+                body: toast.message,
+                appName: Tr.tr("System"),
+                materialIcon: toast.icon,
+                expireTimeout: toast.timeout,
+                urgency: toast.type === Toast.Error ? NotificationUrgency.Critical : NotificationUrgency.Normal
+            });
+            root.list = [comp, ...root.list];
+            toast.close();
+        }
+    }
+
     onDndChanged: {
         if (!GlobalConfig.utilities.toasts.dndChanged)
             return;
@@ -52,6 +75,16 @@ Singleton {
         if (loaded)
             saveTimer.restart();
     }
+    // Toasts sent before this service was made
+    Component.onCompleted: Qt.callLater(takeToasts)
+
+    Connections {
+        function onToastsChanged(): void {
+            Qt.callLater(root.takeToasts);
+        }
+
+        target: Toaster
+    }
 
     Timer {
         id: saveTimer
@@ -65,6 +98,7 @@ Singleton {
                     appIcon: n.appIcon,
                     appName: n.appName,
                     image: n.image,
+                    materialIcon: n.materialIcon,
                     expireTimeout: n.expireTimeout,
                     urgency: n.urgency,
                     resident: n.resident,

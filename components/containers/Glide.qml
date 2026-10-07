@@ -6,14 +6,14 @@ import QtQuick
 // when spun. At an edge the scroll goes on to whatever scrolls around it.
 // Declare one inside a Flickable, ListView or GridView (StyledFlickable and StyledListView have one).
 // It covers the visible area behind the content: the wheel goes to whatever is topmost under the
-// pointer first, so items and nested scroll views get it before this, and the view's own wheel
-// scrolling (no momentum) only gets what this passes on. It only takes the wheel (clicks and hover
-// go through).
+// pointer first, so items and nested scroll views get it before this; the view's own wheel
+// scrolling never gets it. It only takes the wheel (clicks and hover go through).
 MouseArea {
     id: root
 
     required property Flickable flickable
     property bool horizontal
+    readonly property bool isGlide: true // For outer(), which looks for the glides around this one
 
     property real velocity
     property double lastAt
@@ -45,6 +45,64 @@ MouseArea {
         return true;
     }
 
+    // The glide of the nearest scroll view around this one's, which gets what this can't scroll
+    function outer(): var {
+        for (let p = flickable.parent; p; p = p.parent) {
+            const glide = p.contentItem?.children?.find(c => c.isGlide && c !== root);
+            if (glide)
+                return glide;
+        }
+        return null;
+    }
+
+    // A wheel event; false when neither this nor a glide around it could use it
+    function take(angleDelta: point, pixelDelta: point, phase: int): bool {
+        const along = horizontal ? Math.abs(angleDelta.x) >= Math.abs(angleDelta.y) || flickable.contentHeight <= flickable.height : Math.abs(angleDelta.y) >= Math.abs(angleDelta.x);
+        const pixels = horizontal ? (pixelDelta.x || pixelDelta.y) : pixelDelta.y;
+        const angle = horizontal ? (angleDelta.x || angleDelta.y) : angleDelta.y;
+        const now = Date.now();
+
+        // The touchpad marks a scroll's start and end with events that move nothing; the end one
+        // means the fingers lifted. The glides around this one follow along.
+        if (pixels === 0 && angle === 0) {
+            if (phase === Qt.ScrollEnd) {
+                lift.stop();
+                glide.running = Math.abs(velocity) > 60;
+            } else if (phase === Qt.ScrollBegin) {
+                glide.running = false;
+                velocity = 0;
+            }
+            outer()?.take(angleDelta, pixelDelta, phase);
+            return true;
+        }
+
+        if (!along)
+            return outer()?.take(angleDelta, pixelDelta, phase) ?? false;
+
+        if (pixels !== 0 || angle % 120 !== 0) {
+            // Fingers on the touchpad: follow them, and track their speed
+            const d = (pixels !== 0 ? -pixels : -angle / 3) * speed;
+            const dt = Math.max(4, now - lastAt);
+            const v = d * 1000 / dt;
+            velocity = now - lastAt > 120 ? v : velocity * 0.5 + v * 0.5;
+            lastAt = now;
+            glide.running = false;
+            if (!moveBy(d)) {
+                velocity = 0;
+                return outer()?.take(angleDelta, pixelDelta, phase) ?? false;
+            }
+            lift.restart();
+        } else {
+            // A mouse wheel notch: a push into the glide (none at the edge it pushes against)
+            const push = -angle / 120 * 1400;
+            if ((push < 0 && position() <= lowest() + 0.5) || (push > 0 && position() >= highest() - 0.5))
+                return outer()?.take(angleDelta, pixelDelta, phase) ?? false;
+            velocity = glide.running && Math.sign(push) === Math.sign(velocity) ? velocity + push : push;
+            glide.running = true;
+        }
+        return true;
+    }
+
     // In the content, under its items: a ListView or GridView keeps declared children on itself,
     // where z: -1 puts this behind the view, so the view would take the wheel first. Kept over the
     // visible area, as the content can be shorter than the view or start above it
@@ -57,53 +115,12 @@ MouseArea {
     enabled: flickable.interactive
     acceptedButtons: Qt.NoButton
 
+    // Every wheel event stays with the glides: one passed on would reach the view's own wheel
+    // scrolling, which moves by what it has added up since the last scroll it saw begin (seconds ago,
+    // as it sees so few), and the view jumps back
     onWheel: event => {
-        const along = horizontal ? Math.abs(event.angleDelta.x) >= Math.abs(event.angleDelta.y) || flickable.contentHeight <= flickable.height : Math.abs(event.angleDelta.y) >= Math.abs(event.angleDelta.x);
-        const pixels = horizontal ? (event.pixelDelta.x || event.pixelDelta.y) : event.pixelDelta.y;
-        const angle = horizontal ? (event.angleDelta.x || event.angleDelta.y) : event.angleDelta.y;
-        const now = Date.now();
-
-        // The touchpad marks a scroll's start and end with events that move nothing; the end one
-        // means the fingers lifted
-        if (pixels === 0 && angle === 0) {
-            if (event.phase === Qt.ScrollEnd) {
-                lift.stop();
-                glide.running = Math.abs(velocity) > 60;
-            } else if (event.phase === Qt.ScrollBegin) {
-                glide.running = false;
-                velocity = 0;
-            }
-            return;
-        }
-
-        if (!along) {
-            event.accepted = false;
-            return;
-        }
-
-        if (pixels !== 0 || angle % 120 !== 0) {
-            // Fingers on the touchpad: follow them, and track their speed
-            const d = (pixels !== 0 ? -pixels : -angle / 3) * speed;
-            const dt = Math.max(4, now - lastAt);
-            const v = d * 1000 / dt;
-            velocity = now - lastAt > 120 ? v : velocity * 0.5 + v * 0.5;
-            lastAt = now;
-            glide.running = false;
-            if (!moveBy(d)) {
-                event.accepted = false;
-                return;
-            }
-            lift.restart();
-        } else {
-            // A mouse wheel notch: a push into the glide (none at the edge it pushes against)
-            const push = -angle / 120 * 1400;
-            if ((push < 0 && position() <= lowest() + 0.5) || (push > 0 && position() >= highest() - 0.5)) {
-                event.accepted = false;
-                return;
-            }
-            velocity = glide.running && Math.sign(push) === Math.sign(velocity) ? velocity + push : push;
-            glide.running = true;
-        }
+        root.take(event.angleDelta, event.pixelDelta, event.phase);
+        event.accepted = true;
     }
 
     // The fingers lifted (no events for a moment): glide

@@ -28,14 +28,25 @@ hl.gesture({ fingers = 3, direction = "down", action = function()
 end })
 
 -- Window style (Settings > Window style writes window-style.conf: key=value lines)
-local style = { gradient = "1", colors = "c4b5fd a855f7 da70d6", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
-local f = io.open(home .. "/.config/caelestia/window-style.conf")
-if f then
+local style = { gradient = "1", bordertheme = "1", colors = "c4b5fd a855f7 da70d6", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
+local function read_conf(path, into)
+  local f = io.open(path)
+  if not f then return end
   for line in f:lines() do
     local k, v = line:match("^%s*([%w_]+)%s*=%s*(.-)%s*$")
-    if k then style[k] = v end
+    if k then into[k] = v end
   end
   f:close()
+end
+read_conf(home .. "/.config/caelestia/window-style.conf", style)
+-- The border in the colour scheme's colours (theme-border.conf, written by the shell on every
+-- scheme change) until colours are picked on the Window style page
+if style.bordertheme ~= "0" then
+  local theme = {}
+  read_conf(home .. "/.config/caelestia/theme-border.conf", theme)
+  if theme.colors and theme.inactive then
+    style.colors, style.inactive = theme.colors, theme.inactive
+  end
 end
 
 -- On Omarchy (its config defines the global `o`), Caelestia replaces the Omarchy shell;
@@ -164,15 +175,18 @@ else
 end
 
 -- Keyboard options from the witchers-tweaks, added to the ones already set: left Ctrl and left
--- Super trade places (the right-hand keys stay), and Caps Lock types capitals instead of being
--- Omarchy's compose key. Settings > Keyboard & trackpad changes either; what it saves there is
+-- Super trade places (the right-hand keys stay), and Caps Lock is a plain Caps Lock: not Omarchy's
+-- compose key, and not cancelled by Shift (Omarchy's shift:both_capslock_cancel, which made
+-- Shift + 1 turn Caps Lock off and type 1 instead of !). Settings > Keyboard & trackpad changes either; what it saves there is
 -- loaded after this (hypr-settings.lua) and wins.
 pcall(function()
   local options = hl.get_config("input.kb_options")
   options = (type(options) == "string" and options ~= "[[EMPTY]]") and options or ""
   local kept = {}
   for option in options:gmatch("[^,]+") do
-    if option ~= "compose:caps" and option ~= "ctrl:swap_lwin_lctl" then kept[#kept + 1] = option end
+    if option ~= "compose:caps" and option ~= "shift:both_capslock_cancel" and option ~= "ctrl:swap_lwin_lctl" then
+      kept[#kept + 1] = option
+    end
   end
   kept[#kept + 1] = "ctrl:swap_lwin_lctl"
   local new = table.concat(kept, ",")
@@ -183,21 +197,34 @@ end)
 
 -- Three-colour gradient border turning around the active window. Hyprland's borderangle loop
 -- stops after one turn on 0.56, so a timer turns it (~13 s per turn at ~30 fps); one timer per
--- session calls a tick each reload redefines.
+-- session calls a tick each reload redefines. The shell changes the colours live (on a scheme
+-- change) through caelestia_set_border, so it needn't reload Hyprland, which would close its
+-- settings.
 if style.gradient == "1" then
-  local colors = {}
-  for hex in style.colors:gmatch("%x%x%x%x%x%x") do colors[#colors + 1] = hex:lower() end
-  if #colors ~= 3 then colors = { "c4b5fd", "a855f7", "da70d6" } end
-  local gradient, weights = {}, { 3, 3, 2 }
-  for i, hex in ipairs(colors) do
-    for _ = 1, weights[i] do gradient[#gradient + 1] = "rgba(" .. hex .. "ee)" end
+  local function gradient_of(spec)
+    local colors = {}
+    for hex in (spec or ""):gmatch("%x%x%x%x%x%x") do colors[#colors + 1] = hex:lower() end
+    if #colors ~= 3 then return nil end
+    local gradient, weights = {}, { 3, 3, 2 }
+    for i, hex in ipairs(colors) do
+      for _ = 1, weights[i] do gradient[#gradient + 1] = "rgba(" .. hex .. "ee)" end
+    end
+    return gradient
   end
-  hl.config({ general = { col = { active_border = { colors = gradient, angle = 45 }, inactive_border = "rgba(" .. style.inactive .. "aa)" } } })
 
   _G.caelestia_border_angle = _G.caelestia_border_angle or 45
+  function _G.caelestia_set_border(colors, inactive)
+    _G.caelestia_border_gradient = gradient_of(colors) or _G.caelestia_border_gradient or gradient_of("c4b5fd a855f7 da70d6")
+    local col = { active_border = { colors = _G.caelestia_border_gradient, angle = _G.caelestia_border_angle } }
+    if inactive and inactive:match("^%x%x%x%x%x%x$") then col.inactive_border = "rgba(" .. inactive .. "aa)" end
+    hl.config({ general = { col = col } })
+  end
+  _G.caelestia_border_gradient = nil
+  _G.caelestia_set_border(style.colors, style.inactive)
+
   function _G.caelestia_border_tick()
     _G.caelestia_border_angle = (_G.caelestia_border_angle + 360 * 33 / 13330) % 360
-    hl.config({ general = { col = { active_border = { colors = gradient, angle = _G.caelestia_border_angle } } } })
+    hl.config({ general = { col = { active_border = { colors = _G.caelestia_border_gradient, angle = _G.caelestia_border_angle } } } })
   end
   if not _G.caelestia_border_timer then
     _G.caelestia_border_timer = hl.timer(function()
@@ -206,6 +233,7 @@ if style.gradient == "1" then
   end
 else
   _G.caelestia_border_tick = nil
+  _G.caelestia_set_border = nil
 end
 
 -- Title bars on floating windows (ported from the witchers-tweaks titlebars tweak): the

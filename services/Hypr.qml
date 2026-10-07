@@ -37,8 +37,21 @@ Singleton {
     readonly property alias devices: extras.devices
 
     property string lastSpecialWorkspace: ""
+    // Until when a reload the shell asked for may still be under way (reload())
+    property double reloadingUntil
 
     signal configReloaded
+
+    // Reloads Hyprland's config. Panels kept open by a focus grab (the settings overlay) lose it on
+    // a reload; with reloading() they can tell it from a click away and take it back.
+    function reload(): void {
+        reloadingUntil = Date.now() + 2000;
+        Quickshell.execDetached(["hyprctl", "reload"]);
+    }
+
+    function reloading(): bool {
+        return Date.now() < reloadingUntil;
+    }
 
     function dispatch(request: string): void {
         Hyprland.dispatch(request);

@@ -46,6 +46,7 @@ QtObject {
     property string appIcon
     property string appName
     property string image
+    property string materialIcon // Caelestia's own notifications (from toasts) show a Material Symbols icon
     property var hints // Hints are not persisted across restarts
     property real expireTimeout: GlobalConfig.notifs.defaultExpireTimeout
     property int urgency: NotificationUrgency.Normal

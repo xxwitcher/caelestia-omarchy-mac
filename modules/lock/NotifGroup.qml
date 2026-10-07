@@ -99,7 +99,7 @@ StyledRect {
                 id: materialIconComp
 
                 MaterialIcon {
-                    text: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
+                    text: root.notifs[0]?.materialIcon || Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
                     color: root.urgency === "critical" ? Colours.palette.m3onError : root.urgency === "low" ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
                     fontStyle: Tokens.font.icon.large
                 }

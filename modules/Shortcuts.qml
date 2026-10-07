@@ -18,7 +18,7 @@ Scope {
         // qmllint enable unresolved-type
         name: "nexus"
         description: "Open nexus"
-        onPressed: WindowFactory.create()
+        onPressed: WindowFactory.open("")
     }
 
     // qmllint disable unresolved-type
@@ -99,6 +99,14 @@ Scope {
     // qmllint disable unresolved-type
     CustomShortcut {
         // qmllint enable unresolved-type
+        name: "agent"
+        description: "Open the default agent in a terminal window"
+        onPressed: Agents.openInTerminal()
+    }
+
+    // qmllint disable unresolved-type
+    CustomShortcut {
+        // qmllint enable unresolved-type
         name: "utilities"
         description: "Toggle utilities"
         onPressed: {
@@ -138,7 +146,7 @@ Scope {
 
     IpcHandler {
         function open(): void {
-            WindowFactory.create();
+            WindowFactory.open("");
         }
 
         target: "nexus"

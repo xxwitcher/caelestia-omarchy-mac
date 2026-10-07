@@ -19,7 +19,8 @@ StyledRect {
     readonly property bool hasImage: modelData.image.length > 0
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
     readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
-    readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
+    // At least as tall as the image or icon beside the text (taller than two lines of small text)
+    readonly property int nonAnimHeight: Math.max(TokenConfig.sizes.notifs.image, summary.implicitHeight + (root.expanded ? Tokens.spacing.extraSmall * 2 + appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height)) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
 
     color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainer
@@ -178,7 +179,7 @@ StyledRect {
                         anchors.verticalCenterOffset: 1
 
                         sourceComponent: MaterialIcon {
-                            text: Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
+                            text: root.modelData.materialIcon || Icons.getNotifIcon(root.modelData.summary, root.modelData.urgency)
                             color: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.modelData.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
                             fontStyle: Tokens.font.icon.medium
                         }
@@ -211,7 +212,7 @@ StyledRect {
                         centerY: progressIndicator.height / 2
 
                         startAngle: -90
-                        sweepAngle: ((root.modelData.hints.value ?? 0) / 100) * 360
+                        sweepAngle: ((root.modelData.hints?.value ?? 0) / 100) * 360
 
                         Behavior on sweepAngle {
                             Anim {

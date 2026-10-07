@@ -99,7 +99,7 @@ class BarClock : public settings::ObjectNode {
 
     CONFIG_PROPERTY(bool, background, false)
     CONFIG_PROPERTY(bool, showDate, false)
-    CONFIG_PROPERTY(bool, showIcon, true)
+    CONFIG_PROPERTY(bool, showIcon, false)
     CONFIG_PROPERTY(bool, showSeconds, false)
 };
 

@@ -26,6 +26,28 @@ Item {
         return `#${h(c.r)}${h(c.g)}${h(c.b)}`;
     }
 
+    // Opens the picker inside the settings page around the swatch, above it or below it, wherever
+    // it fits. Outside the page it could reach past the settings overlay, where the shell's window
+    // takes no input: a click there lands on the window below and closes the overlay.
+    function openPicker(): void {
+        let bounds = well.parent;
+        while (bounds && bounds.cappedWidth === undefined) // The page (PageBase)
+            bounds = bounds.parent;
+        const at = bounds ? well.mapToItem(bounds, 0, 0) : Qt.point(0, popup.implicitHeight + 6);
+        const boundsHeight = bounds?.height ?? at.y + well.height + popup.implicitHeight + 6;
+        const h = popup.implicitHeight, gap = 6;
+        let y;
+        if (at.y >= h + gap)
+            y = -h - gap;
+        else if (boundsHeight - at.y - well.height >= h + gap)
+            y = well.height + gap;
+        else
+            y = Math.max(-at.y, Math.min(boundsHeight - at.y - h, -h - gap));
+        popup.y = y;
+        popup.x = Math.max(bounds ? -at.x : -Infinity, Math.min(0, well.width - popup.width));
+        popup.open();
+    }
+
     implicitWidth: 44
     implicitHeight: 28
 
@@ -44,18 +66,18 @@ Item {
             well.sat = well.color.hsvSaturation;
             well.val = well.color.hsvValue;
             hexField.text = well.hex(well.color);
-            popup.open();
+            well.openPicker();
         }
     }
 
     Popup {
         id: popup
 
-        // Upwards, so a swatch low on a page doesn't push it out of the window (below only when
-        // there's no room above); the margins keep it inside the window either way
-        y: well.mapToItem(null, 0, 0).y > implicitHeight + 12 ? -implicitHeight - 6 : well.height + 6
-        x: Math.min(0, well.width - width)
+        // x and y: openPicker
         margins: Tokens.padding.small
+        // Drawn in the settings' own window: a popup window of its own would sit outside the
+        // settings overlay's focus grab, and clicking it would close the overlay
+        popupType: Popup.Item
         width: 260
         padding: Tokens.padding.medium
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside

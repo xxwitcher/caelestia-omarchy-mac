@@ -70,6 +70,15 @@ Singleton {
         pickCheck.running = true;
     }
 
+    // The default agent in a terminal window of its own (SUPER + A without Omarchy), the way the
+    // Agent tab runs it
+    function openInTerminal(): void {
+        Quickshell.execDetached({
+            command: [...GlobalConfig.general.apps.terminal, `${scriptDir}/launch.sh`, defaultAgent],
+            workingDirectory: Paths.home
+        });
+    }
+
     function setDefault(id: string): void {
         GlobalConfig.general.apps.agent = id;
         // Keep Omarchy's own launcher (its keybinding and menu) on the same agent

@@ -6,6 +6,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import Quickshell.Widgets
 import Caelestia.Blobs
 import Caelestia.Config
 import qs.components
@@ -62,7 +63,7 @@ StyledWindow {
         screenState.launcher = false;
         screenState.session = false;
         screenState.dashboard = false;
-        panels.popouts.close();
+        panels.popouts.close("fullscreen changed");
     }
 
     name: "drawers"
@@ -310,6 +311,18 @@ StyledWindow {
 
             fullscreen: root.hasFullscreen
         }
+    }
+
+    // An app being dragged to the dock follows the pointer, over everything
+    IconImage {
+        readonly property bool shown: Dock.dragApp !== null && Dock.dragWindow === root
+
+        z: 100
+        visible: shown
+        x: Dock.dragPos.x - implicitSize / 2
+        y: Dock.dragPos.y - implicitSize / 2
+        implicitSize: 44
+        source: shown ? Quickshell.iconPath(Dock.dragApp.icon, "image-missing") : ""
     }
 
     ShellState.ComponentRef {

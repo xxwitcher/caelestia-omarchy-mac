@@ -15,6 +15,17 @@ Singleton {
         nexusComp.createObject(parent ?? dummy, props);
     }
 
+    // Settings as the overlay a popout's "Open settings" gives: centred over everything on the
+    // focused screen, no window frame, closed by clicking away; page is a PageRegistry id (the first
+    // page when empty). A window when no screen has the shell's panels (create() is the window).
+    function open(page: string): void {
+        const popouts = ShellState.componentsForActive()?.panels?.popouts;
+        if (popouts)
+            popouts.detach(page || PageRegistry.pages[0].id);
+        else
+            create();
+    }
+
     QtObject {
         id: dummy
     }

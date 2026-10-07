@@ -485,7 +485,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
         "clock": {
             "background": false,
             "showDate": false,
-            "showIcon": true
+            "showIcon": false
         },
         "statusIcons": [
             {
@@ -790,8 +790,8 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
             "dndChanged": true,
             "audioOutputChanged": true,
             "audioInputChanged": true,
-            "capsLockChanged": true,
-            "numLockChanged": true,
+            "capsLockChanged": false,
+            "numLockChanged": false,
             "kbLayoutChanged": true,
             "kbLimit": true,
             "vpnChanged": true,

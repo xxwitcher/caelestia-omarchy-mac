@@ -11,7 +11,6 @@ import qs.modules.session as Session
 import qs.modules.sidebar as Sidebar
 import qs.modules.utilities as Utilities
 import qs.modules.bar.popouts as BarPopouts
-import qs.modules.utilities.toasts as Toasts
 
 Item {
     id: root
@@ -31,7 +30,6 @@ Item {
     readonly property alias popouts: popoutsWrapper.content
     readonly property alias popoutsWrapper: popoutsWrapper
     readonly property alias utilities: utilities
-    readonly property alias toasts: toasts
     readonly property alias sidebar: sidebar
 
     anchors.fill: parent
@@ -133,14 +131,6 @@ Item {
 
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-    }
-
-    Toasts.Toasts {
-        id: toasts
-
-        anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
-        anchors.right: sidebar.left
-        anchors.margins: Tokens.padding.medium
     }
 
     Sidebar.Wrapper {

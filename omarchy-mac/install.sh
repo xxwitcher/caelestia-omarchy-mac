@@ -109,6 +109,9 @@ else
   "$here/install-hypr.sh" --standalone
 fi
 
+# Instructions and rules for coding agents (the Agent tab, SUPER + A), written for this system
+"$here/install-agent-skills.sh" || echo "warning: the agent skills could not be installed (see above)" >&2
+
 # Title bars on floating windows need the hyprbars plugin built for this Hyprland
 "$here/titlebars/build-hyprbars" || echo "hyprbars could not be built; floating windows get no drag strip"
 

@@ -13,14 +13,89 @@ Singleton {
     readonly property list<string> pinned: adapter.pinned
     // The app drawer button at the end of the dock
     readonly property bool showAppsButton: adapter.showAppsButton
+    // Caelestia Settings in its own place, just above the apps button (instead of as a pinned app)
+    readonly property bool showSettings: adapter.showSettings
+    // The Trash at the very end of the dock
+    readonly property bool showTrash: adapter.showTrash
     // Desktop ids that open at login (~/.config/autostart)
     property list<string> autostart: []
     // Caelestia's own windows (Settings and its file picker) carry Quickshell's app id, whose desktop
     // entry launches nothing; in the dock they're Caelestia Settings, which opens Settings again
     readonly property string settingsId: "caelestia-settings"
 
+    // The pinned apps' entries, in order (pins whose app is gone are left out)
+    readonly property list<var> pinnedApps: {
+        DesktopEntries.applications.values; // Again once the apps are read (none are at startup)
+        const out = [];
+        const seen = new Set();
+        if (showSettings)
+            seen.add(settingsId);
+        for (const id of adapter.pinned) {
+            const e = entryFor(id);
+            if (e && !seen.has(e.id)) {
+                seen.add(e.id);
+                out.push(e);
+            }
+        }
+        return out;
+    }
+
+    // Running apps that aren't pinned
+    readonly property list<var> runningApps: {
+        const out = [];
+        const seen = new Set(pinnedApps.map(e => e.id));
+        if (showSettings)
+            seen.add(settingsId);
+        for (const t of Hypr.toplevels.values) {
+            const e = entryForToplevel(t);
+            if (e && !seen.has(e.id)) {
+                seen.add(e.id);
+                out.push(e);
+            }
+        }
+        return out;
+    }
+
+    // Settings in its own place (DockPopout shows it above the apps button)
+    readonly property DesktopEntry settingsApp: {
+        DesktopEntries.applications.values;
+        return showSettings ? DesktopEntries.byId(settingsId) : null;
+    }
+
+    // Pinned apps first, then running apps that aren't pinned
+    readonly property list<var> apps: [...pinnedApps, ...runningApps]
+
+    // Dragging an app to the dock, to pin it or move it (from the dock itself or the app drawer).
+    // The dock under the drag sets dropIndex (where among the pinned apps it lands, -1 when it
+    // isn't over them) and overTrash (dropping it there takes it out of the dock).
+    property DesktopEntry dragApp: null
+    property var dragWindow: null
+    property point dragPos // In dragWindow's content item
+    property int dropIndex: -1
+    property bool overTrash
+
+    // The dock as it would be with the dragged app dropped where it's held
+    readonly property list<var> previewApps: {
+        if (!dragApp || dropIndex < 0)
+            return apps;
+        const pins = pinnedApps.filter(e => e.id !== dragApp.id);
+        pins.splice(Math.min(dropIndex, pins.length), 0, dragApp);
+        return [...pins, ...runningApps.filter(e => e.id !== dragApp.id)];
+    }
+
+    signal dragStarted(window: var)
+    signal dragEnded
+
     function setShowAppsButton(show: bool): void {
         adapter.showAppsButton = show;
+    }
+
+    function setShowSettings(show: bool): void {
+        adapter.showSettings = show;
+    }
+
+    function setShowTrash(show: bool): void {
+        adapter.showTrash = show;
     }
 
     function move(id: string, by: int): void {
@@ -33,21 +108,68 @@ Singleton {
         adapter.pinned = list;
     }
 
-    // Pinned apps first, then running apps that aren't pinned
-    readonly property list<var> apps: {
-        const out = [];
-        const seen = new Set();
-        const add = e => {
-            if (e && !seen.has(e.id)) {
-                seen.add(e.id);
-                out.push(e);
+    function startDrag(entry: DesktopEntry, window: var, pos: point): void {
+        // Settings keeps its own place while it's shown there
+        if (showSettings && entry.id === settingsId)
+            return;
+        dropIndex = -1;
+        overTrash = false;
+        dragWindow = window;
+        dragPos = pos;
+        dragApp = entry;
+        dragStarted(window);
+    }
+
+    function endDrag(): void {
+        const entry = dragApp;
+        if (entry) {
+            if (overTrash)
+                adapter.pinned = adapter.pinned.filter(p => entryFor(p)?.id !== entry.id);
+            else if (dropIndex >= 0)
+                pinAt(entry.id, dropIndex);
+        }
+        cancelDrag();
+    }
+
+    function cancelDrag(): void {
+        dragApp = null;
+        dragWindow = null;
+        dropIndex = -1;
+        overTrash = false;
+        dragEnded();
+    }
+
+    // Pins the app at index among the pinned apps the dock shows (moving it when it's pinned
+    // already); every other pin stays, in its order, those whose app isn't found too
+    function pinAt(id: string, index: int): void {
+        const pins = adapter.pinned.filter(p => p !== id && entryFor(p)?.id !== id);
+        let at = pins.length;
+        let shown = 0;
+        for (let i = 0; i < pins.length; i++) {
+            if (!entryFor(pins[i]))
+                continue;
+            if (shown === index) {
+                at = i;
+                break;
             }
-        };
-        for (const id of adapter.pinned)
-            add(DesktopEntries.byId(id) ?? DesktopEntries.heuristicLookup(id));
-        for (const t of Hypr.toplevels.values)
-            add(entryForToplevel(t));
-        return out;
+            shown++;
+        }
+        pins.splice(at, 0, id);
+        adapter.pinned = [...new Set(pins)];
+    }
+
+    function openTrash(): void {
+        // trash:/// has no handler of its own (xdg-open hands it to the browser), so it goes to
+        // whatever opens folders
+        Quickshell.execDetached(["sh", "-c", 'app=$(xdg-mime query default inode/directory 2>/dev/null); if [ -n "$app" ] && command -v gtk-launch >/dev/null; then exec gtk-launch "${app%.desktop}" trash:///; fi; for fm in nautilus thunar nemo dolphin; do command -v "$fm" >/dev/null && exec "$fm" trash:///; done; exec gio open trash:///']);
+    }
+
+    function emptyTrash(): void {
+        Quickshell.execDetached(["gio", "trash", "--empty"]);
+    }
+
+    function entryFor(id: string): DesktopEntry {
+        return DesktopEntries.byId(id) ?? DesktopEntries.heuristicLookup(id);
     }
 
     function entryForToplevel(toplevel: var): var {
@@ -168,9 +290,10 @@ Singleton {
         onFileChanged: reload()
         onAdapterUpdated: writeAdapter()
         onLoaded: {
-            // Settings pinned while its windows went by Quickshell's own entry
-            if (adapter.pinned.includes(Quickshell.appId))
-                adapter.pinned = [...new Set(adapter.pinned.map(p => p === Quickshell.appId ? root.settingsId : p))];
+            // Settings pinned while its windows went by Quickshell's own entry, and pins made twice
+            const pins = [...new Set(adapter.pinned.map(p => p === Quickshell.appId ? root.settingsId : p))];
+            if (pins.length !== adapter.pinned.length || pins.some((p, i) => p !== adapter.pinned[i]))
+                adapter.pinned = pins;
         }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound)
@@ -182,6 +305,8 @@ Singleton {
 
             property list<string> pinned: []
             property bool showAppsButton: true
+            property bool showSettings: true
+            property bool showTrash: true
         }
     }
 }

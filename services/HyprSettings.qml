@@ -111,7 +111,7 @@ Singleton {
     }
 
     function writeLua(): void {
-        const lines = ["-- Written by Caelestia settings (Hyprland page). Edit there, not here."];
+        const lines = ["-- Written by Caelestia settings (Displays and Keyboard pages). Edit there, not here."];
         for (const [name, value] of Object.entries(adapter.overrides))
             lines.push(`pcall(function() ${luaFor(name, value)} end)`);
         for (const [name, m] of Object.entries(adapter.monitors))

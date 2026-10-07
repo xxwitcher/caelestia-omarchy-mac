@@ -119,7 +119,7 @@ StyledRect {
                         isToggle: false
                         onClicked: {
                             root.screenState.utilities = false;
-                            WindowFactory.create();
+                            WindowFactory.open("");
                         }
                     }
                 }

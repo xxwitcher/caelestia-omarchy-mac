@@ -146,14 +146,6 @@ QtObject {
                 }
             }
         },
-        Component {
-            // Hyprland
-            StackPage {
-                Component {
-                    HyprlandPage {}
-                }
-            }
-        },
 
         // Shell
         Component {
