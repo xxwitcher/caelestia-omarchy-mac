@@ -43,18 +43,28 @@ Item {
         Anim {}
     }
 
-    Loader {
-        id: content
-
+    // Cut off at the dock's top edge: the drawer comes out from behind the whole dock (its
+    // background included) as it slides up, instead of its apps passing over it
+    Item {
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
+        height: root.panels.dock.visible ? Math.max(0, root.panels.dock.y - root.y) : parent.height
+        clip: true
 
-        active: root.shouldBeActive || root.visible
+        Loader {
+            id: content
 
-        sourceComponent: Content {
-            screenState: root.screenState
-            panels: root.panels
-            maxHeight: root.maxHeight
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            active: root.shouldBeActive || root.visible
+
+            sourceComponent: Content {
+                screenState: root.screenState
+                panels: root.panels
+                maxHeight: root.maxHeight
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ PersistentProperties {
     property bool dashboard
     property bool utilities
     property bool sidebar
+    property bool dock // Hovered at the bottom edge (it also shows while the app drawer is open)
 
     // Dashboard state
     property int dashboardTab

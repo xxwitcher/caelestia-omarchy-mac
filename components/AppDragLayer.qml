@@ -10,6 +10,8 @@ StateLayer {
 
     required property DesktopEntry entry
     property bool draggable: true
+    // In the dock: dropped anywhere off it, the app is unpinned
+    property bool fromDock
     property bool dragging
     readonly property real dragThreshold: 8
 
@@ -37,7 +39,7 @@ StateLayer {
             return;
         if (!dragging && draggable && entry && Math.hypot(event.x - pressX, event.y - pressY) > dragThreshold) {
             dragging = true;
-            Dock.startDrag(entry, QsWindow.window, windowPos(event.x, event.y));
+            Dock.startDrag(entry, QsWindow.window, windowPos(event.x, event.y), fromDock);
         }
         if (dragging)
             Dock.dragPos = windowPos(event.x, event.y);

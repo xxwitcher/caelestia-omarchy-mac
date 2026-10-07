@@ -79,28 +79,10 @@ ColumnLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
-        } else if (id === "dock") {
-            popouts.currentName = "dock";
-            popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
-            popouts.hasCurrent = true;
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
             popouts.hasCurrent = true;
-        }
-    }
-
-    // Opens the dock popout and keeps it open, for an app being dragged to it (from the app drawer)
-    function openDock(): void {
-        for (let i = 0; i < repeater.count; i++) {
-            const ch = repeater.itemAt(i) as EntryWrapper;
-            if (ch?.entryId === "dock") {
-                popouts.currentName = "dock";
-                popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
-                popouts.hasCurrent = true;
-                popouts.held = true;
-                return;
-            }
         }
     }
 
@@ -131,20 +113,6 @@ ColumnLayout {
     }
 
     spacing: Tokens.spacing.medium
-
-    Connections {
-        function onDragStarted(window: var): void {
-            if (window === QsWindow.window)
-                root.openDock();
-        }
-
-        function onDragEnded(): void {
-            if (root.popouts.currentName === "dock")
-                root.popouts.held = false;
-        }
-
-        target: Dock
-    }
 
     Repeater {
         id: repeater
@@ -199,12 +167,11 @@ ColumnLayout {
                     }
                 }
             }
+            // The dock is at the bottom of the screen now (modules/dock); its old entry takes no room
             DelegateChoice {
                 roleValue: "dock"
                 delegate: EntryWrapper {
-                    DockTrigger {
-                        objectName: "taskbarDock"
-                    }
+                    visible: false
                 }
             }
             DelegateChoice {

@@ -34,6 +34,20 @@ Region {
     }
 
     R {
+        panel: root.panels.dock
+        y: root.win.height - height
+        height: panel.height * (1 - root.panels.dock.offsetScale) + root.borderThickness
+    }
+
+    // A dock menu (above the dock) takes clicks, and a click anywhere else closes it: nothing is
+    // left to click through to while one is open
+    Region {
+        width: root.panels.dock.held ? root.win.width : 0
+        height: root.panels.dock.held ? root.win.height : 0
+        intersection: Intersection.Subtract
+    }
+
+    R {
         id: sessionRegion
 
         panel: root.panels.sessionWrapper

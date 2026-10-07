@@ -10,12 +10,10 @@ import qs.components.controls
 import qs.services
 import qs.modules.nexus.common
 
-// Dock: show/hide it in the taskbar and its apps button, Settings and Trash, and manage pinned
-// apps (unpin, reorder; the dock itself also rearranges them by dragging)
+// Dock: show/hide it (at the bottom of the screen) and its apps button, Settings and Trash, and
+// manage pinned apps (unpin, reorder; the dock itself also rearranges them by dragging)
 PageBase {
     id: root
-
-    readonly property var dockEntry: Config.bar.entries.values.find(e => e.id === "dock")
 
     title: Tr.tr("Dock")
 
@@ -27,14 +25,9 @@ PageBase {
 
         ToggleRow {
             first: true
-            text: Tr.tr("Show the dock in the taskbar")
-            subtext: Tr.tr("Hover it to open; right click an app for its menu")
-            checked: root.dockEntry?.enabled ?? false
-            onToggled: {
-                const e = GlobalConfig.bar.entries.values.find(e => e.id === "dock");
-                if (e)
-                    e.enabled = checked;
-            }
+            text: Tr.tr("Show the dock")
+            checked: Dock.enabled
+            onToggled: Dock.setEnabled(checked)
         }
 
         ToggleRow {

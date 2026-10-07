@@ -11,6 +11,8 @@ Singleton {
     id: root
 
     readonly property list<string> pinned: adapter.pinned
+    // The dock at the bottom of the screen (Settings > Dock)
+    readonly property bool enabled: adapter.enabled
     // The app drawer button at the end of the dock
     readonly property bool showAppsButton: adapter.showAppsButton
     // Caelestia Settings in its own place, just above the apps button (instead of as a pinned app)
@@ -56,7 +58,7 @@ Singleton {
         return out;
     }
 
-    // Settings in its own place (DockPopout shows it above the apps button)
+    // Settings in its own place (just before the apps button)
     readonly property DesktopEntry settingsApp: {
         DesktopEntries.applications.values;
         return showSettings ? DesktopEntries.byId(settingsId) : null;
@@ -73,6 +75,8 @@ Singleton {
     property point dragPos // In dragWindow's content item
     property int dropIndex: -1
     property bool overTrash
+    // The drag started in the dock: dropped anywhere off it, the app leaves the dock
+    property bool dragFromDock
 
     // The dock as it would be with the dragged app dropped where it's held
     readonly property list<var> previewApps: {
@@ -85,6 +89,10 @@ Singleton {
 
     signal dragStarted(window: var)
     signal dragEnded
+
+    function setEnabled(on: bool): void {
+        adapter.enabled = on;
+    }
 
     function setShowAppsButton(show: bool): void {
         adapter.showAppsButton = show;
@@ -108,12 +116,13 @@ Singleton {
         adapter.pinned = list;
     }
 
-    function startDrag(entry: DesktopEntry, window: var, pos: point): void {
+    function startDrag(entry: DesktopEntry, window: var, pos: point, fromDock: bool): void {
         // Settings keeps its own place while it's shown there
         if (showSettings && entry.id === settingsId)
             return;
         dropIndex = -1;
         overTrash = false;
+        dragFromDock = fromDock;
         dragWindow = window;
         dragPos = pos;
         dragApp = entry;
@@ -123,7 +132,8 @@ Singleton {
     function endDrag(): void {
         const entry = dragApp;
         if (entry) {
-            if (overTrash)
+            // On the Trash, or (dragged out of the dock) anywhere off the dock: unpinned
+            if (overTrash || (dragFromDock && dropIndex < 0))
                 adapter.pinned = adapter.pinned.filter(p => entryFor(p)?.id !== entry.id);
             else if (dropIndex >= 0)
                 pinAt(entry.id, dropIndex);
@@ -136,6 +146,7 @@ Singleton {
         dragWindow = null;
         dropIndex = -1;
         overTrash = false;
+        dragFromDock = false;
         dragEnded();
     }
 
@@ -304,6 +315,7 @@ Singleton {
             id: adapter
 
             property list<string> pinned: []
+            property bool enabled: true
             property bool showAppsButton: true
             property bool showSettings: true
             property bool showTrash: true

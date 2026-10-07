@@ -18,9 +18,12 @@ Item {
 
     readonly property int padding: Tokens.padding.large
     readonly property int rounding: Tokens.rounding.extraLarge
+    // The search at the top, the apps under it, and the dock (panels.dock, its own panel drawn over
+    // this one) in the room left at the bottom, so the drawer opens around it
+    readonly property real dockRoom: Dock.enabled ? panels.dock.nonAnimHeight : CUtils.clamp(padding - Config.border.thickness, 0, padding)
 
     implicitWidth: listWrapper.width + padding * 2
-    implicitHeight: search.height + listWrapper.height + padding + search.anchors.bottomMargin
+    implicitHeight: search.height + search.anchors.topMargin + listWrapper.height + dockRoom
 
     Item {
         id: listWrapper
@@ -29,8 +32,7 @@ Item {
         implicitHeight: list.height + root.padding
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: search.top
-        anchors.bottomMargin: root.padding
+        anchors.top: search.bottom
 
         ContentList {
             id: list
@@ -38,7 +40,7 @@ Item {
             content: root
             screenState: root.screenState
             panels: root.panels
-            maxHeight: root.maxHeight - search.implicitHeight - root.padding * 3
+            maxHeight: root.maxHeight - search.implicitHeight - root.padding * 2 - root.dockRoom
             search: search
             padding: root.padding
             rounding: root.rounding
@@ -52,9 +54,8 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.top: parent.top
         anchors.margins: root.padding
-        anchors.bottomMargin: CUtils.clamp(root.padding - Config.border.thickness, 0, root.padding)
 
         topPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)
         bottomPadding: Math.round((Tokens.padding.medium + Tokens.padding.large) / 2)

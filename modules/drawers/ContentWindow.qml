@@ -191,6 +191,22 @@ StyledWindow {
             deformAmount: 0.1
         }
 
+        // Kept apart from the app drawer's: the drawer is wider and already goes around the dock,
+        // so melting the two would only bulge the edges beside it
+        PanelBg {
+            id: dockBg
+
+            // EXPERIMENT, dock bounces with the app drawer (to undo: delete these marked lines and
+            // the dock.transform ones below). While the drawer covers the dock, the dock's own shape
+            // gives way to the drawer's, which carries the bounce.
+            readonly property bool underDrawer: panels.launcher.visible && panels.launcher.height * (1 - panels.launcher.offsetScale) >= panels.dock.height
+
+            implicitHeight: underDrawer ? 0 : panel.height // EXPERIMENT (as above)
+            panel: panels.dock
+            deformAmount: 0.1
+            exclude: [launcherBg]
+        }
+
         PanelBg {
             id: sessionBg
 
@@ -278,6 +294,21 @@ StyledWindow {
             }
             launcher.transform: Matrix4x4 {
                 matrix: launcherBg.deformMatrix
+            }
+            dock.transform: Matrix4x4 {
+                // EXPERIMENT, dock bounces with the app drawer (to undo: back to just
+                // `matrix: dockBg.deformMatrix`). Under the drawer, the dock squashes and stretches
+                // with it, around the drawer's centre (its deform, moved into the dock's coordinates)
+                matrix: {
+                    if (!dockBg.underDrawer)
+                        return dockBg.deformMatrix;
+                    const cx = panels.launcher.x + panels.launcher.width / 2 - panels.dock.x;
+                    const cy = panels.launcher.y + panels.launcher.height / 2 - panels.dock.y;
+                    const to = Qt.matrix4x4(1, 0, 0, cx, 0, 1, 0, cy, 0, 0, 1, 0, 0, 0, 0, 1);
+                    const back = Qt.matrix4x4(1, 0, 0, -cx, 0, 1, 0, -cy, 0, 0, 1, 0, 0, 0, 0, 1);
+                    return to.times(launcherBg.rawDeformMatrix).times(back);
+                }
+                // END EXPERIMENT
             }
             session.transform: Matrix4x4 {
                 matrix: sessionBg.deformMatrix

@@ -163,4 +163,21 @@ done
 # Title bars on floating windows need the hyprbars plugin built for this Hyprland
 "$here/titlebars/build-hyprbars" || echo "hyprbars could not be built; floating windows get no drag strip"
 
-echo "Done. Start Caelestia with: caelestia shell -d"
+# Start the shell just installed. Only inside the Hyprland session it's for (not over SSH or from a
+# TTY), and not when Omarchy's own shell was chosen (shell=omarchy in window-style.conf)
+style="${XDG_CONFIG_HOME:-$HOME/.config}/caelestia/window-style.conf"
+if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  echo "Done. Start Caelestia from your Hyprland session with: caelestia shell -d"
+elif grep -qsx 'shell=omarchy' "$style"; then
+  echo "Done. Omarchy's shell is the one chosen (shell=omarchy in $style), so Caelestia wasn't started."
+else
+  # Omarchy's shell runs until the next login (hypr-caelestia.lua swaps it out then): stop it,
+  # its launcher first so it doesn't start it again
+  if [[ -d /usr/share/omarchy ]]; then
+    pkill -f 'omarchy-launch-shell' 2>/dev/null || true
+    pkill -f "quickshell -n -p ${OMARCHY_PATH:-/usr/share/omarchy}/shell" 2>/dev/null || true
+  fi
+  caelestia shell -k &>/dev/null || true
+  caelestia shell -d
+  echo "Done. Caelestia is running."
+fi

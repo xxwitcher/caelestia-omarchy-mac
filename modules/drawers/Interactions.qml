@@ -58,6 +58,13 @@ CustomMouseArea {
         return x >= width - corner && y <= corner;
     }
 
+    // The very bottom-right corner of the screen, so the quick actions panel doesn't open on the way
+    // along the bottom edge (to the dock); once open it stays while the pointer is on it
+    function inUtilitiesCorner(x: real, y: real): bool {
+        const corner = Config.border.thickness + Config.border.rounding;
+        return x >= width - corner && y >= height - corner;
+    }
+
     function onWheel(event: WheelEvent): void {
         if (fullscreen)
             return;
@@ -84,6 +91,8 @@ CustomMouseArea {
 
             if (!utilitiesShortcutActive)
                 screenState.utilities = false;
+
+            screenState.dock = false;
 
             if (!popouts.held && (!popouts.currentName.startsWith("traymenu") || ((popouts.current as StackView)?.depth ?? 0) <= 1)) {
                 popouts.hasCurrent = false;
@@ -227,8 +236,11 @@ CustomMouseArea {
                 screenState.dashboard = false;
         }
 
-        // Show utilities on hover
-        const showUtilities = inBottomPanel(panels.utilities, x, y, true);
+        // Show the dock while the pointer is at the bottom edge under it, or on it
+        screenState.dock = inBottomPanel(panels.dock, x, y);
+
+        // Show utilities on hover (from the bottom-right corner, then while on it)
+        const showUtilities = inUtilitiesCorner(x, y) || (screenState.utilities && inBottomPanel(panels.utilities, x, y, true));
 
         // Always update visibility based on hover if not in shortcut mode
         if (!utilitiesShortcutActive) {
@@ -252,6 +264,9 @@ CustomMouseArea {
         function onLauncherChanged() {
             // If launcher is hidden, clear shortcut flags for dashboard and OSD
             if (!root.screenState.launcher) {
+                // The dock stayed up for the app drawer: it goes too unless the pointer is on it
+                root.screenState.dock = root.containsMouse && root.inBottomPanel(root.panels.dock, root.mouseX, root.mouseY);
+
                 root.dashboardShortcutActive = false;
                 root.osdShortcutActive = false;
                 root.utilitiesShortcutActive = false;

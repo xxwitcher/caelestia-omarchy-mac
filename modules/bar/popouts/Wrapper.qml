@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import QMLTermWidget
 import Caelestia.Config
 import qs.components
 import qs.components.filedialog
@@ -37,6 +38,10 @@ Item {
     // when it was opened from them), which comes back when it's done
     property var fileDialog: null
     property string modeBeforeFile
+    // A command run in a terminal here (detachedMode "terminal": the app drawer's Remove…), and its
+    // title; it closes when the command ends
+    property string terminalCommand
+    property string terminalTitle
 
     // Dummy object so Tokens attached prop resolves to global config
     // Anim configs are not per-monitor
@@ -72,6 +77,15 @@ Item {
         hasCurrent = false;
         detachedMode = "";
         dialog?.rejected(); // Closing the overlay cancels the pick
+    }
+
+    function showTerminal(title: string, command: string): void {
+        terminalTitle = title;
+        terminalCommand = command;
+        setAnims(true);
+        detachedMode = "terminal";
+        setAnims(false);
+        focus = true;
     }
 
     function showFileDialog(dialog: var): void {
@@ -139,7 +153,7 @@ Item {
         active: root.isDetached && !regrabbing
         windows: [QsWindow.window]
         onCleared: {
-            if (Hypr.reloading() || detachedHover.hovered || fileDialogHover.hovered) {
+            if (Hypr.reloading() || detachedHover.hovered || fileDialogHover.hovered || terminalHover.hovered) {
                 regrabbing = true;
                 Qt.callLater(() => regrabbing = false);
             } else {
@@ -176,6 +190,69 @@ Item {
         sourceComponent: WindowInfo {
             screen: root.screen
             client: Hypr.activeToplevel
+        }
+    }
+
+    Comp {
+        id: terminalComp
+
+        shouldBeActive: root.detachedMode === "terminal"
+        anchors.centerIn: parent
+
+        sourceComponent: StyledClippingRect {
+            radius: Tokens.rounding.extraLarge
+            color: Colours.tPalette.m3surfaceContainerLowest
+            implicitWidth: 760
+            implicitHeight: 420
+
+            StyledText {
+                id: titleText
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: Tokens.padding.large
+                text: root.terminalTitle
+                font: Tokens.font.title.small
+                elide: Text.ElideRight
+            }
+
+            QMLTermWidget {
+                id: terminal
+
+                anchors.top: titleText.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: Tokens.padding.large
+
+                font.family: "CaskaydiaCove NF"
+                font.pixelSize: 13
+                colorScheme: "Caelestia"
+                blinkingCursor: true
+                enableBold: true
+                antialiasText: true
+                smooth: true
+                focus: true
+
+                session: QMLTermSession {
+                    id: terminalSession
+
+                    initialWorkingDirectory: Quickshell.env("HOME")
+                    shellProgram: "bash"
+                    shellProgramArgs: ["-c", `${root.terminalCommand}; printf '\\nDone. Press Enter to close.'; read -r`]
+                    onFinished: root.close("terminal finished")
+                }
+
+                Component.onCompleted: {
+                    terminalSession.startShellProgram();
+                    forceActiveFocus();
+                }
+            }
+        }
+
+        HoverHandler {
+            id: terminalHover
         }
     }
 

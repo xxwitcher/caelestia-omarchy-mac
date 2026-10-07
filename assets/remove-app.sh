@@ -1,51 +1,64 @@
 #!/bin/bash
-# Remove an app from the app drawer's menu (Remove…): remove-app.sh <desktop-id> <name> <terminal...>
-# On Omarchy its own remover does it (web apps, TUIs, launchers you made, packages, flatpaks, as
-# the Witcher's Tweaks app drawer did). Without Omarchy: a launcher of your own is deleted, a
-# package or flatpak is uninstalled in a terminal (the given terminal command), where it asks for
-# your password and to confirm.
+# Remove an app from the app drawer's menu (Remove…): remove-app.sh <desktop-id> <name>
+# The same on every system (Omarchy's remover isn't used, so plain Asahi works alike):
+# - a launcher of your own (~/.local/share/applications: web apps, TUIs, AppImages...) is deleted,
+#   with its icon when that's one of yours, and the AppImage it starts
+# - a package's app is uninstalled in a terminal (sudo pacman -Rns, asking for your password)
+# - a flatpak is uninstalled in a terminal
+# For those two it prints "run <command>": the shell runs it in its own terminal, in the overlay
+# like its settings.
+# Anything else says why in a notification.
 
 id="${1%.desktop}"
 name="${2:-$id}"
-shift 2
-terminal=("$@")
-[[ ${#terminal[@]} -gt 0 ]] || terminal=(foot)
 
-[[ -n $id ]] || exit 1
+fail() {
+  notify-send -a caelestia-shell -u normal "Couldn't remove $name" "$1" 2>/dev/null
+  echo "$1" >&2
+  exit 1
+}
 
-omarchy_bin="${OMARCHY_PATH:-/usr/share/omarchy}/bin"
-if [[ -x $omarchy_bin/omarchy-remove-launcher-entry ]]; then
-  # Its helpers are called by name
-  [[ :$PATH: == *":$omarchy_bin:"* ]] || export PATH="$omarchy_bin:$PATH"
-  exec omarchy-remove-launcher-entry "$id" "$name"
-fi
+[[ -n $id ]] || fail "No app was given."
 
 user_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 dirs=("$user_dir")
 IFS=: read -ra data_dirs <<<"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 for d in "${data_dirs[@]}"; do dirs+=("$d/applications"); done
 
+# The launcher: <dir>/<id>.desktop, or one in a subfolder (an id like kde-foo is kde/foo.desktop)
 file=""
 for d in "${dirs[@]}"; do
   if [[ -f $d/$id.desktop ]]; then
     file="$d/$id.desktop"
     break
   fi
+  if [[ $id == *-* && -f $d/${id/-//}.desktop ]]; then
+    file="$d/${id/-//}.desktop"
+    break
+  fi
 done
-[[ -n $file ]] || { echo "No launcher found for $id" >&2; exit 1; }
+[[ -n $file ]] || fail "Its launcher ($id.desktop) wasn't found."
 
-# In a terminal that stays open on the result
+# For the shell's terminal (sudo asks for the password there)
 in_terminal() {
-  exec "${terminal[@]}" bash -c "$1"'; printf "\nPress Enter to close."; read -r'
+  printf 'run %s\n' "$1"
+  exit 0
 }
 
-if [[ ${file%/*} == "$user_dir" ]]; then
+if [[ $(readlink -f "$file") == "$(readlink -f "$user_dir")"/* ]]; then
+  icon=$(sed -n 's/^Icon=//p' "$file" | head -1)
+  exec_line=$(sed -n 's/^Exec=//p' "$file" | head -1)
+  # An AppImage of yours goes with its launcher
+  appimage=$(grep -o '[^" ]*\.[Aa]pp[Ii]mage' <<<"$exec_line" | head -1)
+  appimage="${appimage/#\~/$HOME}"
   rm -f "$file"
+  [[ $icon == /* && $(readlink -f "$icon") == "$HOME"/* ]] && rm -f "$icon"
+  [[ -n $appimage && $(readlink -f "$appimage") == "$HOME"/* ]] && rm -f "$appimage"
   update-desktop-database "$user_dir" &>/dev/null || true
   exit 0
 fi
 
-if package=$(pacman -Qqo "$file" 2>/dev/null | head -1) && [[ -n $package ]]; then
+if package=$(pacman -Qqo "$(readlink -f "$file")" 2>/dev/null | head -1) && [[ -n $package ]]; then
   in_terminal "echo $(printf '%q' "Uninstalling $name ($package)..."); sudo pacman -Rns $(printf '%q' "$package")"
 fi
 
@@ -53,5 +66,4 @@ if command -v flatpak >/dev/null && flatpak info "$id" &>/dev/null; then
   in_terminal "flatpak uninstall $(printf '%q' "$id")"
 fi
 
-echo "Don't know how to uninstall $id" >&2
-exit 1
+fail "It isn't one of your launchers, a package's or a flatpak's, so there's nothing here to uninstall."

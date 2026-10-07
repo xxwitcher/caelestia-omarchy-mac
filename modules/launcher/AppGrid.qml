@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
 import Caelestia.Config
 import Caelestia.I18n
@@ -75,8 +76,11 @@ GridView {
                 label: Tr.tr("Remove %1").arg(entry.name),
                 icon: "delete_forever",
                 action: () => {
-                    // A package or flatpak is uninstalled in a terminal, where it asks to confirm
-                    Quickshell.execDetached([`${Quickshell.shellDir}/assets/remove-app.sh`, entry.id, entry.name, ...GlobalConfig.general.apps.terminal]);
+                    // A package or flatpak is uninstalled in the shell's terminal (the overlay),
+                    // where it asks for the password and to confirm
+                    remover.appName = entry.name;
+                    remover.command = [`${Quickshell.shellDir}/assets/remove-app.sh`, entry.id, entry.name];
+                    remover.running = true;
                     root.screenState.launcher = false;
                 }
             },
@@ -130,7 +134,7 @@ GridView {
         implicitWidth: root.cellWidth
         implicitHeight: root.cellHeight
 
-        // Dragged to the dock (it opens beside the drawer) to pin the app there
+        // Dragged to the dock (at the bottom of the drawer) to pin the app there
         AppDragLayer {
             entry: app.modelData
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -164,6 +168,22 @@ GridView {
             elide: Text.ElideRight
             text: app.modelData.name
             font: Tokens.font.label.medium
+        }
+    }
+
+    // assets/remove-app.sh: removes a launcher of yours itself, or prints "run <command>" for the
+    // terminal (a package's or flatpak's uninstall)
+    Process {
+        id: remover
+
+        property string appName
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const run = text.match(/^run (.*)$/m);
+                if (run)
+                    ShellState.componentsForActive()?.panels?.popouts.showTerminal(Tr.tr("Removing %1").arg(remover.appName), run[1]);
+            }
         }
     }
 
