@@ -109,6 +109,37 @@ else
   "$here/install-hypr.sh" --standalone
 fi
 
+# The Witcher colour theme (defaults/witcher-theme.json: gruvbox soft dark with its colours
+# changed) among the saved themes on Settings > Colours; a fresh install starts in it
+install_witcher_theme() {
+  local overrides="${XDG_CONFIG_HOME:-$HOME/.config}/caelestia/colour-overrides.json" fresh=0
+  [[ -f $overrides ]] || fresh=1
+  mkdir -p "$(dirname "$overrides")"
+  python3 -I - "$here/defaults/witcher-theme.json" "$overrides" "$fresh" <<'PY' || return 1
+import json, sys
+theme_path, overrides_path, fresh = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
+theme = json.load(open(theme_path))
+try:
+    data = json.load(open(overrides_path))
+except (OSError, ValueError):
+    data = {}
+data.setdefault("overrides", {})
+themes = data.setdefault("themes", [])
+if not any(t.get("name") == theme["name"] for t in themes):
+    themes.append(theme)
+if fresh:
+    # Its colours on its scheme, which the shell (and the CLI themes) pick up once it's set
+    data["overrides"][f"{theme['scheme']} {theme['flavour']} {theme['mode']}"] = dict(theme["colours"])
+json.dump(data, open(overrides_path, "w"), indent=4)
+PY
+  if ((fresh)); then
+    local scheme flavour mode
+    read -r scheme flavour mode < <(python3 -I -c 'import json, sys; t = json.load(open(sys.argv[1])); print(t["scheme"], t["flavour"], t["mode"])' "$here/defaults/witcher-theme.json")
+    caelestia scheme set -n "$scheme" -f "$flavour" -m "$mode" || true
+  fi
+}
+install_witcher_theme || echo "warning: the Witcher colour theme could not be added (see above)" >&2
+
 # Instructions and rules for coding agents (the Agent tab, SUPER + A), written for this system
 "$here/install-agent-skills.sh" || echo "warning: the agent skills could not be installed (see above)" >&2
 
