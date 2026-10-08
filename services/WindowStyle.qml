@@ -13,8 +13,9 @@ import qs.utils
 Singleton {
     id: root
 
+    // A fresh install: one border colour, the scheme's accent, following scheme changes
     readonly property var defaults: ({
-            gradient: "1",
+            gradient: "0",
             bordertheme: "1",
             colors: "c4b5fd a855f7 da70d6",
             solid: "",

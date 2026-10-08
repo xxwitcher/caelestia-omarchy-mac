@@ -101,7 +101,7 @@ Item {
                     asynchronous: true
                     source: Paths.absolutePath(Config.paths.noNotifsPic)
                     fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                    sourceSize.width: clipRect.width * 0.8 // Qt applies the screen's scale itself
                     // Fits the shorter sidebar: never taller than the space left beside the text
                     Layout.preferredWidth: clipRect.width * 0.6
                     Layout.preferredHeight: Math.max(0, Math.min(clipRect.width * 0.45, clipRect.height - 80))

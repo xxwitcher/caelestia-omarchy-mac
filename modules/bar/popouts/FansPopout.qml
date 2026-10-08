@@ -14,6 +14,17 @@ ColumnLayout {
     width: 300
     spacing: Tokens.spacing.small
 
+    // Live readings while it's shown
+    onVisibleChanged: Fans.watchers += visible ? 1 : -1
+    Component.onCompleted: {
+        if (visible)
+            Fans.watchers++;
+    }
+    Component.onDestruction: {
+        if (visible)
+            Fans.watchers--;
+    }
+
     // Sliders report their position (0-1); these map it to and from real values
     function toPos(v: real, from: real, to: real): real {
         return Math.max(0, Math.min(1, (v - from) / Math.max(1, to - from)));

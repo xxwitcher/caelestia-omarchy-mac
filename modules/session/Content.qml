@@ -52,7 +52,7 @@ Column {
     AnimatedImage {
         width: Tokens.sizes.session.button
         height: Tokens.sizes.session.button
-        sourceSize.width: width * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+        sourceSize.width: width // Qt applies the screen's scale itself
 
         playing: visible
         asynchronous: true

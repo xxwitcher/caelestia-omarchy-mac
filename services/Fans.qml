@@ -20,6 +20,17 @@ Singleton {
     property list<var> temps: []
     property var applied: ({})
     readonly property var hottest: temps.reduce((a, t) => !a || t.celsius > a.celsius ? t : a, null)
+    // Popouts showing the fans (FansPopout): readings every 2 s while one is, or while a fan
+    // follows the temperature (range); every 10 s otherwise, which is enough for the bar's icon
+    property int watchers
+    readonly property bool live: watchers > 0 || fans.some(f => config(f.n).mode === "range")
+    readonly property int interval: live ? 2 : 10
+    onIntervalChanged: {
+        // A new interval needs a new fans.py: stop this one (onExited starts the next)
+        restarting = true;
+        readProc.running = false;
+    }
+    property bool restarting
 
     function config(n: int): var {
         const c = adapter.fans[String(n)] ?? {};
@@ -78,7 +89,7 @@ Singleton {
         id: readProc
 
         running: true
-        command: ["python3", "-I", root.script, "watch", "2"]
+        command: ["python3", "-I", root.script, "watch", String(root.interval)]
         stdout: SplitParser {
             onRead: text => {
                 try {
@@ -103,7 +114,14 @@ Singleton {
             }
         }
         // It only stops if something kills it: start it again
-        onExited: restartTimer.restart()
+        onExited: {
+            if (root.restarting) {
+                root.restarting = false;
+                running = true;
+            } else {
+                restartTimer.restart();
+            }
+        }
     }
 
     Timer {

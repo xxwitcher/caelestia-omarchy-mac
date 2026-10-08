@@ -228,11 +228,12 @@ PageBase {
             last: true
             icon: "restart_alt"
             text: Tr.tr("Default colors")
+            // Back to the scheme's colours (the accent, or the gradient from them)
             onClicked: root.save({
                     colors: WindowStyle.defaults.colors,
                     solid: WindowStyle.defaults.solid,
                     inactive: WindowStyle.defaults.inactive,
-                    bordertheme: "0"
+                    bordertheme: WindowStyle.defaults.bordertheme
                 })
         }
     }

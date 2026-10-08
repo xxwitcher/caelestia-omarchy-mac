@@ -52,7 +52,7 @@ ColumnLayout {
                     asynchronous: true
                     source: Paths.absolutePath(Config.paths.lockNoNotifsPic)
                     fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
+                    sourceSize.width: clipRect.width * 0.8 // Qt applies the screen's scale itself
 
                     layer.enabled: true
                     layer.effect: Colouriser {

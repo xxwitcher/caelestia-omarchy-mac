@@ -7,6 +7,8 @@ Each OpenFile/SaveFile/SaveFiles request goes to the shell (`caelestia-qs -c cae
 filepicker open <id> <request>`, modules/FilePicker.qml), which shows its picker in the overlay
 and answers on this service's org.caelestia.FilePicker.Done. When the shell can't take it (not
 running), the request goes to the GTK portal's picker instead, so picking a file always works.
+It exits after a minute with nothing to do (it's ~20 MB of Python), and D-Bus starts it again for
+the next request.
 """
 
 import json
@@ -15,6 +17,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 import uuid
 import warnings
 
@@ -63,6 +66,15 @@ QS = shutil.which("caelestia-qs") or "caelestia-qs"
 connection: Gio.DBusConnection | None = None
 # Requests the shell is answering: id -> { invocation, method, handle, files, registration }
 pending: dict[str, dict] = {}
+# Requests the GTK portal is answering
+in_flight = 0
+IDLE_EXIT_SECONDS = 60
+last_activity = time.monotonic()
+
+
+def touch() -> None:
+    global last_activity
+    last_activity = time.monotonic()
 
 
 def path_bytes(value) -> str | None:
@@ -145,6 +157,7 @@ def request_for(method: str, title: str, options: dict) -> tuple[dict, list[str]
 
 
 def finish(request_id: str, response: int, path: str) -> None:
+    touch()
     entry = pending.pop(request_id, None)
     if not entry:
         return
@@ -162,8 +175,13 @@ def finish(request_id: str, response: int, path: str) -> None:
 
 def fall_back(method: str, parameters: GLib.Variant, invocation: Gio.DBusMethodInvocation) -> None:
     """The GTK portal's picker answers instead."""
+    global in_flight
+    in_flight += 1
 
     def done(conn, result):
+        global in_flight
+        in_flight -= 1
+        touch()
         try:
             invocation.return_value(conn.call_finish(result))
         except GLib.Error:
@@ -174,6 +192,7 @@ def fall_back(method: str, parameters: GLib.Variant, invocation: Gio.DBusMethodI
 
 
 def on_chooser_call(conn, sender, path, interface, method, parameters, invocation):
+    touch()
     handle, _app_id, _parent, title, options = parameters.unpack()
     request, files = request_for(method, title, options)
     request_id = uuid.uuid4().hex
@@ -224,8 +243,19 @@ def on_bus_acquired(conn, name):
 
 def main() -> None:
     loop = GLib.MainLoop()
-    Gio.bus_own_name(Gio.BusType.SESSION, BUS_NAME, Gio.BusNameOwnerFlags.NONE, on_bus_acquired, None,
-                     lambda *_: loop.quit())
+    owner = Gio.bus_own_name(Gio.BusType.SESSION, BUS_NAME, Gio.BusNameOwnerFlags.NONE, on_bus_acquired, None,
+                             lambda *_: loop.quit())
+
+    # Nothing open and nothing asked for a minute: let the name go first (a request after that
+    # starts a new one), then stop
+    def exit_when_idle() -> bool:
+        if pending or in_flight or time.monotonic() - last_activity < IDLE_EXIT_SECONDS:
+            return True
+        Gio.bus_unown_name(owner)
+        GLib.timeout_add(200, loop.quit)
+        return False
+
+    GLib.timeout_add_seconds(15, exit_when_idle)
     loop.run()
 
 

@@ -127,7 +127,7 @@ StyledRect {
                         source: Qt.resolvedUrl(root.modelData.image)
                         fillMode: Image.PreserveAspectCrop
                         sourceSize: {
-                            const size = TokenConfig.sizes.notifs.image * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1);
+                            const size = TokenConfig.sizes.notifs.image; // Qt applies the screen's scale itself
                             return Qt.size(size, size);
                         }
                         cache: false

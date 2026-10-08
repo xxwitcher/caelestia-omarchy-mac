@@ -28,7 +28,7 @@ hl.gesture({ fingers = 3, direction = "down", action = function()
 end })
 
 -- Window style (Settings > Window style writes window-style.conf: key=value lines)
-local style = { gradient = "1", bordertheme = "1", colors = "c4b5fd a855f7 da70d6", solid = "", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
+local style = { gradient = "0", bordertheme = "1", colors = "c4b5fd a855f7 da70d6", solid = "", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
 local function read_conf(path, into)
   local f = io.open(path)
   if not f then return end

@@ -10,8 +10,7 @@ Image {
     asynchronous: true
     fillMode: Image.PreserveAspectCrop
     source: IUtils.urlForPath(path, fillMode)
-    sourceSize: {
-        const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
-        return Qt.size(width * dpr, height * dpr);
-    }
+    // In points: Qt asks for it at the screen's scale itself (multiplying by the scale here as well
+    // decoded and cached every image at twice the resolution it shows at, 4x the memory)
+    sourceSize: Qt.size(width, height)
 }
