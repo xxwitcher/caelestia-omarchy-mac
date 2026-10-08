@@ -303,6 +303,38 @@ if style.titlebars ~= "0" then
   end)
 end
 
+-- SUPER + T: a tiled window made floating keeps its tiled size, often most of the screen, so it
+-- shrinks to at most 65% x 70% of the screen and is centred. (Hyprland sends no event when a
+-- window floats, so this is done by the key itself.) Errors go to $XDG_RUNTIME_DIR/caelestia-hypr.log,
+-- as Hyprland's own log is usually off.
+local function toggle_float()
+  local w = hl.get_active_window()
+  if w == nil then return end
+  local was_tiled = not w.floating
+  local size_w, size_h = w.size[1] or w.size.x, w.size[2] or w.size.y
+  hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+  if not was_tiled or (tonumber(w.fullscreen) or 0) ~= 0 or w.monitor == nil then return end
+
+  local m = w.monitor
+  local max_w = math.floor(m.width / m.scale * 0.65)
+  local max_h = math.floor(m.height / m.scale * 0.7)
+  if size_w > max_w or size_h > max_h then
+    hl.dispatch(hl.dsp.window.resize({ x = math.min(size_w, max_w), y = math.min(size_h, max_h) }))
+  end
+  hl.dispatch(hl.dsp.window.center())
+end
+pcall(hl.unbind, "SUPER + T")
+hl.bind("SUPER + T", function()
+  local ok, err = pcall(toggle_float)
+  if not ok then
+    local f = io.open((os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/caelestia-hypr.log", "a")
+    if f then
+      f:write(os.date("%H:%M:%S "), "SUPER + T: ", tostring(err), "\n")
+      f:close()
+    end
+  end
+end, { description = "Toggle window floating/tiling" })
+
 -- Floating windows resize by dragging their border; tiled windows don't. Follows Hyprland's
 -- events, nothing polls.
 if style.borderresize ~= "0" then
