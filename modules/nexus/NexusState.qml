@@ -9,6 +9,9 @@ QtObject {
     property int currentPageIdx
     property list<int> subPageIdxStack
     property bool searchOpen
+    property string searchText // What the settings search has typed (NavLocations lists the pages it finds)
+    // An option picked in the search: the page showing it scrolls to it and flashes it (PageBase)
+    property string revealLabel
 
     property string selectedWallpaperCategory
     property BluetoothDevice selectedBtDevice

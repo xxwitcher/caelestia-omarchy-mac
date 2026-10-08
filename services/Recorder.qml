@@ -10,7 +10,7 @@ Singleton {
     readonly property alias running: props.running
     readonly property alias paused: props.paused
     readonly property alias elapsed: props.elapsed
-    // The recorder `caelestia record` runs, picked as omarchy-mac's caelestia-cli picks it:
+    // The recorder `caelestia record` runs, picked as Caelestia-Silicon's caelestia-cli picks it:
     // wf-recorder on Apple Silicon (gpu-screen-recorder can't capture there), else gpu-screen-recorder
     readonly property string recorder: deviceTree.text().includes("apple") ? "wf-recorder" : "gpu-screen-recorder"
     // wf-recorder can't pause

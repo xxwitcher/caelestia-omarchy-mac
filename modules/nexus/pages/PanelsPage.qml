@@ -1,6 +1,8 @@
 import QtQuick.Layouts
 import Caelestia.Config
 import Caelestia.I18n
+import qs.services
+import qs.modules.nexus
 import qs.modules.nexus.common
 
 PageBase {
@@ -27,6 +29,14 @@ PageBase {
             text: Tr.tr("Taskbar")
             subtext: Config.bar.persistent ? Tr.tr("Always visible") : Config.bar.showOnHover ? Tr.tr("Reveal on hover") : Tr.tr("Reveal on drag")
             onClicked: root.nState.openSubPage(2)
+        }
+
+        NavRow {
+            visible: PageRegistry.consolidated
+            icon: "dock_to_left"
+            text: Tr.tr("Dock")
+            subtext: Dock.enabled ? Tr.trCtx("Enabled", "panel status") : Tr.trCtx("Disabled", "panel status")
+            onClicked: root.nState.openSubPage(11)
         }
 
         NavRow {

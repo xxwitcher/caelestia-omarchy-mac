@@ -1,199 +1,133 @@
-<h1 align=center>caelestia-shell</h1>
+<h1 align=center>Caelestia-Silicon</h1>
 
-<div align=center>
+<p align=center>
+A desktop shell for Apple Silicon Macs running Asahi Linux, built on
+<a href="https://github.com/caelestia-dots/shell">Caelestia</a>,
+<a href="https://quickshell.outfoxxed.me">Quickshell</a> and
+<a href="https://hypr.land">Hyprland</a>.
+</p>
 
-![GitHub last commit](https://img.shields.io/github/last-commit/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=9ccbfb)
-![GitHub Repo stars](https://img.shields.io/github/stars/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=b9c8da)
-![GitHub repo size](https://img.shields.io/github/repo-size/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=d3bfe6)
-[![Ko-Fi donate](https://img.shields.io/badge/donate-kofi?style=for-the-badge&logo=ko-fi&logoColor=ffffff&label=ko-fi&labelColor=101418&color=f16061&link=https%3A%2F%2Fko-fi.com%2Fsoramane)](https://ko-fi.com/soramane)
-[![Discord invite](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscordapp.com%2Fapi%2Finvites%2FBGDCFCmMBk%3Fwith_counts%3Dtrue&query=approximate_member_count&style=for-the-badge&logo=discord&logoColor=ffffff&label=discord&labelColor=101418&color=96f1f1&link=https%3A%2F%2Fdiscord.gg%2FBGDCFCmMBk)][discord]
+Caelestia-Silicon is a fork of the Caelestia shell, reworked for MacBooks on
+[Asahi Linux](https://asahilinux.org/) (Arch Linux ARM). It installs everything it needs on a plain
+Asahi system: the shell, its Hyprland config, theming, and Mac-specific extras like the Touch Bar.
+[Omarchy-Mac](https://github.com/omacom/omarchy-mac) is supported too: there it replaces Omarchy's
+shell and leaves the rest of Omarchy alone. It doesn't need Omarchy.
 
-</div>
+## Features
 
-https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
+On top of Caelestia's bar, launcher, dashboard, sidebar, notifications, lock screen and overview:
 
-## Components
+-   **Settings app**: a borderless overlay (<kbd>SUPER</kbd> + <kbd>,</kbd>, or from the dock) with
+    search that finds individual options, macOS-style.
+-   **Dock** at the bottom of the screen: pinned apps you drag to reorder or drag out to unpin, an app
+    drawer, Settings and Trash.
+-   **Colours**: simple colour options (accent, highlights, outlines, panels, window background and
+    text) applied live, per-scheme overrides, saved custom themes, and a window border that follows
+    the theme. The Witcher theme is installed by default.
+-   **Caelestia's file picker** for every app that asks the desktop portal for one (browsers,
+    Electron apps, Flatpaks, GTK4 apps).
+-   **Apple Silicon hardware**: Touch Bar layout with media and screenshot keys (tiny-dfr), brightness
+    and media keys, fan control, screen recording that works on Apple Silicon (wf-recorder), and a
+    driver for SiliconMotion SM77x USB display adapters.
+-   **Trackpad gestures**: 3-finger swipe between workspaces, and up or down for the overview.
+-   **Coding agents**: an agent terminal in the shell (<kbd>SUPER</kbd> + <kbd>A</kbd>), with skills
+    that teach agents about this system.
+-   **Updates and apps**: pending updates in Settings, and uninstalling apps from the app drawer in
+    an in-shell terminal.
 
--   Widgets: [`Quickshell`](https://quickshell.outfoxxed.me)
--   Window manager: [`Hyprland`](https://hypr.land)
--   Dots: [`caelestia`][dots-repo]
+## Requirements
+
+-   An Apple Silicon Mac running [Asahi Linux](https://asahilinux.org/) on **Arch Linux ARM** (the
+    installer uses `pacman` and `makepkg`), or [Omarchy-Mac](https://github.com/omacom/omarchy-mac).
+-   A user with `sudo`.
 
 ## Installation
 
-> [!NOTE]
-> This repo is for Caelestia's desktop shell only. If you want installation instructions
-> for the entire dotfiles (which include this shell), head to [the main repo][dots-repo] instead.
-
-### Arch Linux
-
-> [!WARNING]
-> If you want to make your own changes/tweaks to the shell, do NOT edit the files installed by the AUR
-> package. Instead, follow the instructions in the [manual installation section](#manual-installation).
-
-The shell is available from the AUR as `caelestia-shell`. You can install it with an AUR helper (recommended),
-like [`paru`](https://github.com/morganamilo/paru), or by manually downloading the PKGBUILD and running `makepkg -si`.
-
-A package following the latest commit also exists as `caelestia-shell-git`. This is bleeding-edge
-and likely to be unstable/have bugs. Regular users are recommended to use the stable package (`caelestia-shell`).
-
-### Nix
-
-You can run the shell directly via `nix run`:
-
 ```sh
-nix run github:caelestia-dots/shell#with-cli
+git clone https://github.com/xxwitcher/caelestia-silicon.git
+cd caelestia-silicon
+./install.sh
 ```
 
-Or add it to your system configuration:
+The installer:
 
-```nix
-{
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+-   builds and installs the shell and the packages it needs from `packaging/pkgbuilds/`: the shell
+    (`caelestia-silicon`), `quickshell-caelestia` (Quickshell in `/opt`, next to any other
+    Quickshell), `caelestia-cli` and a few dependencies;
+-   without Omarchy, installs Hyprland, the portals, a polkit agent, a keyring, `foot` and `thunar`,
+    and links a full Hyprland config to `~/.config/hypr/hyprland.lua` (an existing one is backed up);
+-   on Omarchy-Mac, adds Caelestia to the end of your existing `hyprland.lua` instead;
+-   sets up the Touch Bar, the USB display adapter driver, the file picker, title bars on floating
+    windows, the Witcher theme and the agent skills;
+-   starts the shell when run inside a Hyprland session.
 
-    caelestia-shell = {
-      url = "github:caelestia-dots/shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
-}
-```
-
-For full functionality, use `caelestia-shell.packages.<system>.with-cli`, which can be added to your
-`environment.systemPackages`, `users.users.<username>.packages`, `home.packages` if using home-manager,
-or a devshell. The `default` package does not include the CLI.
-You can then run the shell with `caelestia-shell`.
-
-For home-manager, you can also use Caelestia's Home Manager module (explained in [the configuration section](#home-manager-module)), which installs and configures the shell and CLI.
-
-### Manual installation
-
-Dependencies:
-
--   [`caelestia-cli`](https://github.com/caelestia-dots/cli)
--   [`quickshell-git`](https://git.outfoxxed.me/quickshell/quickshell) - this has to be the git version, not the latest tagged version
--   `glibc`
--   `gcc-libs`
--   [`ddcutil`](https://github.com/rockowitz/ddcutil)
--   [`brightnessctl`](https://github.com/Hummer12007/brightnessctl)
--   [`libcava`](https://github.com/LukashonakV/cava)
--   [`networkmanager`](https://gitlab.freedesktop.org/NetworkManager/NetworkManager)
--   [`lm_sensors`](https://github.com/lm-sensors/lm-sensors)
--   [`aubio`](https://github.com/aubio/aubio)
--   [`libpipewire`](https://github.com/PipeWire/pipewire)
--   [`libqalculate`](https://github.com/Qalculate/libqalculate)
--   [`power-profiles-daemon`](https://gitlab.freedesktop.org/upower/power-profiles-daemon)
--   [`ttf-material-symbols-variable`](https://github.com/google/material-design-icons)
--   [`ttf-rubik-vf`](https://github.com/googlefonts/rubik)
--   [`ttf-cascadia-code-nerd`](https://github.com/ryanoasis/nerd-fonts)
--   `qt6-base`
--   `qt6-declarative`
--   `qt6-imageformats`
--   [`qt6-m3shapes-git`](https://github.com/soramanew/m3shapes)
--   [`swappy`](https://github.com/jtheoof/swappy)
--   [`fish`](https://github.com/fish-shell/fish-shell)
--   [`bash`](https://www.gnu.org/software/bash)
-
-Build dependencies:
-
--   [`cmake`](https://gitlab.kitware.com/cmake/cmake)
--   [`ninja`](https://github.com/ninja-build/ninja)
--   `qt6-shadertools`
-
-> [!IMPORTANT]
-> The commands below (and in the "Updating" section) assume `$XDG_CONFIG_HOME` is set.
-> If it is unset, substitute it with the path to your config folder (typically `~/.config`).
-
-To install the shell manually, install all dependencies and clone this repo to `$XDG_CONFIG_HOME/quickshell/caelestia`.
-Then build and install using CMake.
-
-```sh
-cd $XDG_CONFIG_HOME/quickshell
-git clone https://github.com/caelestia-dots/shell.git caelestia
-
-cd caelestia
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/
-cmake --build build
-sudo cmake --install build
-```
-
-> [!TIP]
-> You can customise the installation location via the CMake flags `INSTALL_LIBDIR`, `INSTALL_QMLDIR`, and
-> `INSTALL_QSCONFDIR` for the libraries (e.g. the version helper), QML plugin, and Quickshell config directories
-> respectively. If you set the `INSTALL_LIBDIR` flag, the `CAELESTIA_LIB_DIR` variable must also be set to
-> the same directory in your system's environment.
->
-> For example, installing to `~/.config/quickshell/caelestia` for easy local changes:
->
-> ```sh
-> mkdir -p ~/.config/quickshell/caelestia
-> cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ -DINSTALL_QSCONFDIR="$HOME/.config/quickshell/caelestia"
-> cmake --build build
-> sudo cmake --install build
-> sudo chown -R $USER ~/.config/quickshell/caelestia
-> ```
-
-## Usage
-
-You can start the shell by running `caelestia shell -d` (preferred) or `qs -c caelestia -n -d`.
-You may omit `-d` from the command to keep the shell attached to the current terminal if necessary,
-though you likely want it to be detached (so it doesn't close when the terminal is closed).
-
-If using the [Caelestia dotfiles][dots-repo], the shell will be autostarted on login
-via a `hl.on("hyprland.start", ...)` function in the Hyprland config.
-
-### Shortcuts/IPC
-
-All keybinds are accessible via Hyprland [global shortcuts](https://wiki.hypr.land/Configuring/Basics/Binds/#dbus-global-shortcuts).
-If using the [Caelestia dotfiles][dots-repo], the keybinds are already configured for you.
-Otherwise, the [`keybinds.lua`](https://github.com/caelestia-dots/caelestia/blob/main/hypr/hyprland/keybinds.lua#L63-L67) file
-contains an example of how to use global shortcuts.
-
-All IPC commands can be accessed via `caelestia shell ...`, for example:
-
-```sh
-caelestia shell mpris getActive trackTitle
-```
-
-You can view the list of available IPC commands by running `caelestia shell -s`.
-
-### PFP/Wallpapers
-
-The profile picture for the dashboard is read from the file `~/.face`. You can set it by clicking it in the dashboard,
-or by manually copying or symlinking your image to the path.
-
-The wallpapers for the wallpaper switcher are read from `~/Pictures/Wallpapers`
-by default. To change it, modify `paths.wallpaperDir` in `~/.config/caelestia/shell.json`.
-
-To set the wallpaper, you can type `>wallpaper` in the launcher to open the wallpaper switcher.
-Alternatively, you can also use `caelestia wallpaper -f <path_to_wallpaper>` to set the wallpaper directly.
-Use `caelestia wallpaper -h` for more info about this command.
+Keep the checkout: the Hyprland integration and the agent skills are linked from it.
 
 ## Updating
 
-### Packaged install (AUR)
+```sh
+cd caelestia-silicon
+git pull
+./install.sh
+```
 
-If using the full dotfiles or the CLI, run `caelestia update` to perform a full system update and
-update the dots.
-Otherwise, if you installed the shell on its own, update your system using your AUR helper (e.g., `paru`).
+Settings > General > Updates checks for system package updates.
 
-### Manual install
+## Usage
 
-If you installed the shell manually by cloning the repo, you can update by pulling the changes from git
-in the local checkout.
-
-For example, if you installed to `$XDG_CONFIG_HOME/quickshell/caelestia`:
+The shell starts with Hyprland. To start or restart it by hand:
 
 ```sh
-cd $XDG_CONFIG_HOME/quickshell/caelestia
-git pull
+caelestia shell -d
 ```
+
+### Shortcuts
+
+| Keys | Action |
+| --- | --- |
+| <kbd>SUPER</kbd> + <kbd>SPACE</kbd> | App launcher |
+| <kbd>SUPER</kbd> + <kbd>,</kbd> | Settings |
+| <kbd>SUPER</kbd> + <kbd>`</kbd> | Overview |
+| <kbd>SUPER</kbd> + <kbd>N</kbd> | Sidebar |
+| <kbd>SUPER</kbd> + <kbd>A</kbd> | Coding agent |
+| <kbd>SUPER</kbd> + <kbd>B</kbd> | Browser |
+| <kbd>SUPER</kbd> + <kbd>M</kbd> | Minimise window (the dock brings it back) |
+| <kbd>CTRL</kbd> + <kbd>Q</kbd> | Close window |
+| 3-finger swipe left/right | Switch workspace |
+| 3-finger swipe up/down | Open/close the overview |
+
+The left <kbd>CTRL</kbd> and <kbd>SUPER</kbd> keys are swapped, so <kbd>⌘</kbd> works like it does
+on macOS (<kbd>⌘</kbd> + <kbd>C</kbd> copies, <kbd>⌘</kbd> + <kbd>Q</kbd> closes) and the
+<kbd>SUPER</kbd> shortcuts above are on the <kbd>control</kbd> key. Settings > Keyboard & trackpad
+changes this.
+Without Omarchy, `packaging/hypr/standalone/hyprland.lua` adds the usual window management
+shortcuts (<kbd>SUPER</kbd> + <kbd>RETURN</kbd> terminal, <kbd>SUPER</kbd> + <kbd>1</kbd>–<kbd>9</kbd>
+workspaces and so on).
+
+All shell actions are also available through IPC, for example:
+
+```sh
+caelestia shell mpris getActive trackTitle
+caelestia shell -s   # list every IPC command
+```
+
+### Wallpapers
+
+Wallpapers are read from `~/Pictures/Wallpapers` (`paths.wallpaperDir` in `shell.json` changes it);
+pick them in Settings > Appearance, or set one with `caelestia wallpaper -f <path>`. On Omarchy-Mac,
+Omarchy's theme backgrounds are linked there too, one folder per theme.
+
+### Your own Hyprland config
+
+On Asahi, `~/.config/hypr/hyprland.lua` is a link to `packaging/hypr/standalone/hyprland.lua` in
+this checkout: put your changes in `~/.config/hypr/user.lua`, which it loads last. On Omarchy-Mac,
+`hyprland.lua` stays yours, and Caelestia's part is loaded from its end.
+`~/.config/caelestia/hypr-caelestia.lua` is a link to `packaging/hypr/caelestia.lua`; don't edit it.
 
 ## Configuring
 
-All configuration options belong in `~/.config/caelestia/shell.json`. This file is _not_ created by
-default; you must create it manually. Options that you omit from the config file will use their default
-values.
+Most options are in the Settings app (<kbd>SUPER</kbd> + <kbd>,</kbd>). All of them, including the ones
+Settings doesn't show, live in `~/.config/caelestia/shell.json`. Options you leave out use their default values.
 
 ### Per-monitor configuration
 
@@ -868,101 +802,27 @@ token values to produce the final computed values.
 Per-monitor token overrides are also available at
 `~/.config/caelestia/monitors/<monitor_name>/shell-tokens.json`.
 
-### Home Manager Module
+## Repository layout
 
-For NixOS users, a Home Manager module is also available.
-
-<details><summary><code>home.nix</code></summary>
-
-```nix
-programs.caelestia = {
-  enable = true;
-  systemd = {
-    enable = false; # if you prefer starting from your compositor
-    target = "graphical-session.target";
-    environment = [];
-  };
-  settings = {
-    bar.statusIcons = [
-      { id = "lockStatus"; enabled = true; }
-      { id = "network"; enabled = true; }
-      { id = "bluetooth"; enabled = true; }
-      { id = "battery"; enabled = false; }
-    ];
-    paths.wallpaperDir = "~/Images";
-  };
-  cli = {
-    enable = true; # Also add caelestia-cli to path
-    settings = {
-      theme.enableGtk = false;
-    };
-  };
-};
-```
-
-The module automatically adds the shell to the path with **full functionality**. The CLI is not required; however, you can enable and configure it.
-
-</details>
-
-## FAQ
-
-### Need help or support?
-
-You can join the Caelestia Discord server for assistance and discussion [here][discord].
-
-### I want to make my own changes to the Hyprland config!
-
-Check out the configuring section on the [dots repo](https://github.com/caelestia-dots/caelestia#configuring).
-
-### I want to make my own changes to other stuff!
-
-See the [manual installation](#manual-installation) section for the corresponding repo.
-
-### I want to disable ___ feature!
-
-Please read the [configuring](#configuring) section.
-If there is no corresponding option, make a [feature request](https://github.com/caelestia-dots/shell/issues/new?template=feature.yml).
-
-### How do I make my colour scheme change to match my wallpaper?
-
-Set a wallpaper via `>wallpaper` in the launcher or `caelestia wallpaper`, and set the scheme to the dynamic scheme via 
-`>scheme` in the launcher or `caelestia scheme set`, e.g.:
-
-```sh
-caelestia wallpaper -f <path_to_wallpaper>
-caelestia scheme set -n dynamic
-```
-
-### My wallpapers aren't showing up in the launcher!
-
-The launcher pulls wallpapers from `~/Pictures/Wallpapers` by default. You can change this in the config. Additionally,
-the launcher only shows an odd number of wallpapers at one time. If you only have 2 wallpapers, consider getting more
-(or just putting one).
+| Path | What's there |
+| --- | --- |
+| `install.sh`, `install-hypr.sh`, `install-agent-skills.sh` | The installers |
+| `packaging/pkgbuilds/` | Packages the installer builds |
+| `packaging/hypr/` | Hyprland integration and the standalone config |
+| `packaging/agents/` | Skills for coding agents |
+| `packaging/extras/`, `packaging/smidriver/`, `packaging/titlebars/` | Touch Bar, USB display driver, title bars |
+| `packaging/defaults/` | The Witcher theme |
+| `modules/`, `components/`, `services/`, `plugin/` | The shell (QML and its C++ plugin) |
+| `scripts/` | Build helpers (the settings search index) |
 
 ## Credits
 
-Thanks to the Hyprland Discord community (especially the homies in #rice-discussion) for all the help and suggestions
-for improving these dots!
+Caelestia-Silicon is a fork of [Caelestia](https://github.com/caelestia-dots/shell) by
+[@soramanew](https://github.com/soramanew) and its contributors, and isn't affiliated with the
+Caelestia project. It's built on [Quickshell](https://quickshell.outfoxxed.me) by
+[@outfoxxed](https://github.com/outfoxxed), [Hyprland](https://hypr.land) and
+[Asahi Linux](https://asahilinux.org/).
 
-A special thanks to [@outfoxxed](https://github.com/outfoxxed) for making Quickshell and the effort put into fixing issues
-and implementing various feature requests.
+## License
 
-Another special thanks to [@end_4](https://github.com/end-4) for his [config](https://github.com/end-4/dots-hyprland)
-which helped me a lot with learning how to use Quickshell.
-
-Finally, another thank you to all the configs I took inspiration from (only one for now):
-
--   [Axenide/Ax-Shell](https://github.com/Axenide/Ax-Shell)
-
-## Stonks 📈
-
-<a href="https://www.star-history.com/#caelestia-dots/shell&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date" />
- </picture>
-</a>
-
-[dots-repo]: https://github.com/caelestia-dots/caelestia
-[discord]: https://caelestiashell.com/discord
+GPL-3.0, like Caelestia. See [LICENSE](LICENSE).

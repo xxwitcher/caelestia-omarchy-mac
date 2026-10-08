@@ -31,7 +31,7 @@ Item {
     // takes no input: a click there lands on the window below and closes the overlay.
     function openPicker(): void {
         let bounds = well.parent;
-        while (bounds && bounds.cappedWidth === undefined) // The page (PageBase)
+        while (bounds && (bounds.cappedWidth === undefined || bounds.embedded)) // The page (PageBase), not one embedded in it
             bounds = bounds.parent;
         const at = bounds ? well.mapToItem(bounds, 0, 0) : Qt.point(0, popup.implicitHeight + 6);
         const boundsHeight = bounds?.height ?? at.y + well.height + popup.implicitHeight + 6;

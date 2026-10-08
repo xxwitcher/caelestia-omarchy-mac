@@ -296,8 +296,8 @@ Item {
                 anchors.fill: parent
                 nState.screen: root.screen
                 nState.animatingContainer: nexus.opacity < 1
-                // The page whose id is the mode ("bluetooth", "audio"...), else the first
-                nState.currentPageIdx: Math.max(0, PageRegistry.pages.findIndex(p => p.id === root.queuedMode))
+                // The page whose id is the mode ("bluetooth", "audio"...), else the default one
+                nState.currentPageIdx: PageRegistry.indexOf(root.queuedMode)
                 onClose: root.close("closed from settings")
                 Component.onDestruction: console.info(`Detached settings destroyed (detachedMode "${root.detachedMode}")`)
             }

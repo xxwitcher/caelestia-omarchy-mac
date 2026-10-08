@@ -1,16 +1,15 @@
 .direnv
-/result
 /.qmlls.ini
 build/
 .cache/
 logs
-# omarchy-mac package builds
-omarchy-mac/pkgbuilds/*/src/
-omarchy-mac/pkgbuilds/*/pkg/
-omarchy-mac/pkgbuilds/*/*.pkg.tar.*
-omarchy-mac/pkgbuilds/*/*.tar.gz
-omarchy-mac/pkgbuilds/*/build.log
-omarchy-mac/pkgbuilds/quickshell-caelestia/quickshell/
-omarchy-mac/pkgbuilds/qt6-m3shapes-git/qt6-m3shapes-git/
-omarchy-mac/pkgbuilds/ttf-rubik-vf/*.ttf
-omarchy-mac/pkgbuilds/ttf-rubik-vf/*.txt
+# Package builds
+packaging/pkgbuilds/*/src/
+packaging/pkgbuilds/*/pkg/
+packaging/pkgbuilds/*/*.pkg.tar.*
+packaging/pkgbuilds/*/*.tar.gz
+packaging/pkgbuilds/*/build.log
+packaging/pkgbuilds/quickshell-caelestia/quickshell/
+packaging/pkgbuilds/qt6-m3shapes-git/qt6-m3shapes-git/
+packaging/pkgbuilds/ttf-rubik-vf/*.ttf
+packaging/pkgbuilds/ttf-rubik-vf/*.txt

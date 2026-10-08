@@ -21,7 +21,7 @@ PopupRow {
 
     readonly property Item page: {
         let p = parent;
-        while (p && !(p.flickable && p.nState !== undefined))
+        while (p && !(p.flickable && p.nState !== undefined && !p.embedded)) // An embedded page doesn't scroll: the one it's in
             p = p.parent;
         return p;
     }

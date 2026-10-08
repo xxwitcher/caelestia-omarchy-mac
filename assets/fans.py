@@ -8,7 +8,7 @@ macsmc_hwmon driver.
 
 Setting a speed needs the driver loaded with macsmc_hwmon.fan_control=1 (a
 kernel option; fanN_target is read-only without it) and write access to
-fanN_target, which omarchy-mac/90-caelestia-fans.rules gives the wheel group.
+fanN_target, which packaging/90-caelestia-fans.rules gives the wheel group.
 """
 
 import glob

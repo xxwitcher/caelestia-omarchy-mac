@@ -30,6 +30,15 @@ ColumnLayout {
         clearIcon.font: Tokens.font.icon.medium
         clearIcon.padding: Tokens.padding.extraSmall
 
+        // Enter opens the first page found
+        onAccepted: {
+            const first = PageRegistry.pages.findIndex(p => PageRegistry.matches(p, text));
+            if (first >= 0) {
+                root.nState.currentPageIdx = first;
+                text = "";
+            }
+        }
+
         Behavior on bg.border.color {
             CAnim {}
         }
@@ -38,6 +47,12 @@ ColumnLayout {
             target: root.nState
             property: "searchOpen"
             value: searchField.text.length > 0
+        }
+
+        Binding {
+            target: root.nState
+            property: "searchText"
+            value: searchField.text.trim()
         }
     }
 

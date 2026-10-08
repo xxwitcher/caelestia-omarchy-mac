@@ -21,7 +21,7 @@ Singleton {
     function open(page: string): void {
         const popouts = ShellState.componentsForActive()?.panels?.popouts;
         if (popouts)
-            popouts.detach(page || PageRegistry.pages[0].id);
+            popouts.detach(page || PageRegistry.defaultPage);
         else
             create();
     }
@@ -61,6 +61,7 @@ Singleton {
                 anchors.fill: parent
                 nState.screen: win.screen
                 nState.isWindow: true
+                nState.currentPageIdx: PageRegistry.indexOf(PageRegistry.defaultPage)
                 onClose: win.destroy()
             }
 

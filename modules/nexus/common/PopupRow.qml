@@ -84,7 +84,10 @@ ConnectedRect {
                 id: area
 
                 parent: {
-                    if (root.keepPopupAsChild)
+                    // In the row while closed, so it scrolls, fades and clips with the page (in the
+                    // window, a row scrolled out of view would leave its button showing past the
+                    // settings' edge); out in the window only while open, to grow over the page
+                    if (root.keepPopupAsChild || (!popup.open && popup.animDriver <= 0))
                         return triggerArea;
 
                     const win = QsWindow.window;
