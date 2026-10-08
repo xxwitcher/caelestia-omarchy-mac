@@ -73,7 +73,9 @@ Singleton {
             // Same size as the Witcher's Tweaks agent terminal
             font.pixelSize: 12
             colorScheme: "Caelestia"
-            blinkingCursor: true
+            // A blink redraws the shell's whole screen twice a second (agents draw their own
+            // cursor anyway)
+            blinkingCursor: false
             enableBold: true
             antialiasText: true
             smooth: true

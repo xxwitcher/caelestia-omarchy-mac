@@ -10,6 +10,12 @@ settings::ObjectNode* style(const settings::ObjectNode* cfg, const QString& key)
     return cfg->value(key).value<settings::ObjectNode*>();
 }
 
+void disconnectAll(QList<QMetaObject::Connection>& connections) {
+    for (const auto& connection : std::as_const(connections))
+        QObject::disconnect(connection);
+    connections.clear();
+}
+
 } // namespace
 
 // FontStyleBase
@@ -58,20 +64,17 @@ void FontStyleBase::bind(settings::ObjectNode* cfg) {
     if (m_cfg == cfg)
         return;
 
-    if (m_cfg) {
-        disconnect(m_cfg, nullptr, this, nullptr);
-        disconnect(style(m_cfg, u"large"_s), nullptr, this, nullptr);
-        disconnect(style(m_cfg, u"medium"_s), nullptr, this, nullptr);
-        disconnect(style(m_cfg, u"small"_s), nullptr, this, nullptr);
-    }
+    disconnectAll(m_connections);
 
     m_cfg = cfg;
 
     if (cfg) {
-        connect(cfg, &settings::Node::optionChanged, this, &FontStyleBase::rebuild);
-        connect(style(cfg, u"large"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild);
-        connect(style(cfg, u"medium"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild);
-        connect(style(cfg, u"small"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild);
+        m_connections = {
+            connect(cfg, &settings::Node::optionChanged, this, &FontStyleBase::rebuild),
+            connect(style(cfg, u"large"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild),
+            connect(style(cfg, u"medium"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild),
+            connect(style(cfg, u"small"_s), &settings::Node::optionChanged, this, &FontStyleBase::rebuild),
+        };
     }
 
     rebuild();
@@ -122,13 +125,13 @@ void IconFontStyle::bind(settings::ObjectNode* cfg) {
     if (m_cfg == cfg)
         return;
 
-    if (m_cfg)
-        disconnect(style(m_cfg, u"extraLarge"_s), nullptr, this, nullptr);
+    disconnect(m_extraLargeConnection);
 
     FontStyleBase::bind(cfg);
 
     if (cfg)
-        connect(style(cfg, u"extraLarge"_s), &settings::Node::optionChanged, this, &IconFontStyle::rebuild);
+        m_extraLargeConnection =
+            connect(style(cfg, u"extraLarge"_s), &settings::Node::optionChanged, this, &IconFontStyle::rebuild);
 }
 
 QFont IconFontStyle::extraLarge() const {
@@ -225,8 +228,7 @@ void FontTokens::bindFont(AppearanceFont* font) {
     if (m_font == font)
         return;
 
-    if (m_font)
-        disconnect(m_font, nullptr, this, nullptr);
+    disconnectAll(m_fontConnections);
 
     m_font = font;
 
@@ -239,9 +241,11 @@ void FontTokens::bindFont(AppearanceFont* font) {
         m_mono->bind(font->mono());
         m_icon->bind(font->icon());
 
-        connect(font, &AppearanceFont::clockChanged, this, &FontTokens::rebuildClock);
-        connect(font, &AppearanceFont::scaleChanged, this, &FontTokens::rebuildScale);
-        connect(font, &AppearanceFont::workspacesChanged, this, &FontTokens::workspacesChanged);
+        m_fontConnections = {
+            connect(font, &AppearanceFont::clockChanged, this, &FontTokens::rebuildClock),
+            connect(font, &AppearanceFont::scaleChanged, this, &FontTokens::rebuildScale),
+            connect(font, &AppearanceFont::workspacesChanged, this, &FontTokens::workspacesChanged),
+        };
     } else {
         rebuildScale();
         m_headline->bind(nullptr);

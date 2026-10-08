@@ -1,5 +1,7 @@
 #include "tokensattached.hpp"
 
+#include <qhash.h>
+#include <qpointer.h>
 #include <qquickitem.h>
 
 #include "common.hpp"
@@ -16,12 +18,36 @@ const AppearanceConfig* resolveAppearance(const ConfigRoot* config, bool complet
     return ConfigSingleton::instance()->appearance();
 }
 
+// Every item's Tokens used to build its own font and animation tokens (each font style's fonts,
+// every easing curve, and their connections to the config), twice for an item that then learnt
+// its screen. They're the same for every item on a screen, so items share them: one FontTokens
+// per font config (global, or a screen's), owned by that config, and one AnimTokens (always
+// global).
+FontTokens* sharedFont(AppearanceFont* font) {
+    static QHash<const AppearanceFont*, QPointer<FontTokens>> shared;
+    auto& tokens = shared[font];
+    if (!tokens) {
+        tokens = new FontTokens(font);
+        tokens->bindFont(font);
+    }
+    return tokens;
+}
+
+AnimTokens* sharedAnim() {
+    static QPointer<AnimTokens> tokens;
+    if (!tokens) {
+        auto* const curves = TokensSingleton::instance()->appearance()->curves();
+        tokens = new AnimTokens(curves);
+        tokens->bindDurations(ConfigSingleton::instance()->appearance()->anim()->durations());
+        tokens->bindCurves(curves);
+    }
+    return tokens;
+}
+
 } // namespace
 
 Tokens::Tokens(QObject* parent)
-    : QQuickAttachedPropertyPropagator(parent)
-    , m_font(new FontTokens(this))
-    , m_anim(new AnimTokens(this)) {
+    : QQuickAttachedPropertyPropagator(parent) {
     bindAnim();
     bindFont();
     initialize();
@@ -74,13 +100,12 @@ void Tokens::attachedParentChange(
 }
 
 void Tokens::bindAnim() {
-    m_anim->bindDurations(ConfigSingleton::instance()->appearance()->anim()->durations());
-    m_anim->bindCurves(TokensSingleton::instance()->appearance()->curves());
+    m_anim = sharedAnim();
 }
 
 void Tokens::bindFont() {
     const auto* appearance = m_config ? m_config->appearance() : ConfigSingleton::instance()->appearance();
-    m_font->bindFont(appearance->font());
+    m_font = sharedFont(appearance->font());
 }
 
 #define TOKENS_ATTACHED_GETTER(Type, name)                                                                             \

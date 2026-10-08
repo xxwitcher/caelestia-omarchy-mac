@@ -1,5 +1,5 @@
 #!/bin/bash
-# Regenerate the agent usage records the Agent tab shows: [--force] [--limits-only] [agent...]
+# Regenerate the agent usage records the Agent tab shows: [--force] [--limits-only] [--no-stats] [agent...]
 # Each usage-<agent>.py collector next to this prints one display-ready JSON record; this writes
 # them to ~/.local/state/caelestia/agents/usage/<agent>.json, which the tab watches.
 # Adapted from Omarchy's omarchy-agent-usage-update (MIT, see LICENSE.omarchy).
@@ -18,7 +18,7 @@ flags=()
 only=()
 while (($# > 0)); do
   case "$1" in
-  --force | --limits-only) flags+=("$1") ;;
+  --force | --limits-only | --no-stats) flags+=("$1") ;;
   *) only+=("$1") ;;
   esac
   shift

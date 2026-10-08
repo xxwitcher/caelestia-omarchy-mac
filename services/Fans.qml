@@ -68,16 +68,19 @@ Singleton {
             if (last === want || (want !== "auto" && typeof last === "number" && Math.abs(last - want) < 50))
                 continue;
             applied[String(fan.n)] = want;
-            Quickshell.execDetached(["python3", script, "set", String(fan.n), String(want)]);
+            Quickshell.execDetached(["python3", "-I", script, "set", String(fan.n), String(want)]);
         }
     }
 
+    // One fans.py for the shell's lifetime, printing a reading every 2 s: starting Python for
+    // every reading cost more CPU than everything else the shell does while idle
     Process {
         id: readProc
 
-        command: ["python3", root.script, "read"]
-        stdout: StdioCollector {
-            onStreamFinished: {
+        running: true
+        command: ["python3", "-I", root.script, "watch", "2"]
+        stdout: SplitParser {
+            onRead: text => {
                 try {
                     const data = JSON.parse(text);
                     root.present = data.present;
@@ -99,13 +102,14 @@ Singleton {
                 }
             }
         }
+        // It only stops if something kills it: start it again
+        onExited: restartTimer.restart()
     }
 
     Timer {
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        interval: 2000
+        id: restartTimer
+
+        interval: 5000
         onTriggered: readProc.running = true
     }
 

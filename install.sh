@@ -9,15 +9,33 @@ pkgbuilds="$packaging/pkgbuilds"
 
 sudo pacman -S --needed vulkan-headers cli11 ninja cmake git aubio libqalculate \
   ttf-material-symbols-variable ttf-cascadia-code-nerd papirus-icon-theme swappy fish dart-sass cliphist fuzzel \
-  python-build python-installer python-hatch python-hatch-vcs pybind11 meson autoconf-archive qmltermwidget wf-recorder \
-  hyprsunset adw-gtk-theme python-gobject
+  python-build python-installer python-hatch python-hatch-vcs pybind11 meson autoconf-archive wf-recorder \
+  hyprsunset adw-gtk-theme python-gobject jq pacman-contrib xdg-utils
+
+# Packages ours replace: they own the same files, and --noconfirm won't swap them out
+declare -A replaces=(
+  [caelestia-silicon]=caelestia-omarchy-mac # The shell's package under its old name
+  [qmltermwidget-caelestia]=qmltermwidget   # The Agent tab's terminal, patched (see its PKGBUILD)
+)
+
+# Installed already, at this PKGBUILD's version where it fixes one (where pkgver() makes it at build
+# time, any installed version will do). pacman -Q answers for packages that only provide the name
+# too, so the name it gives has to be this one.
+installed_current() {
+  local pkg="$1" have want
+  have=$(pacman -Q "$pkg" 2>/dev/null) || return 1
+  [[ ${have%% *} == "$pkg" ]] || return 1
+  grep -q '^pkgver()' PKGBUILD && return 0
+  want=$(set +eu; source ./PKGBUILD >/dev/null 2>&1; echo "${epoch:+$epoch:}$pkgver-$pkgrel")
+  [[ ${have#* } == "$want" ]]
+}
 
 build_install() {
   local pkg="$1"
   cd "$pkgbuilds/$pkg"
 
-  # Skip rebuilding dependencies that are already installed
-  if pacman -Q "$pkg" &>/dev/null && [[ "$pkg" != "caelestia-silicon" ]]; then
+  # Skip rebuilding dependencies that are already installed (the shell itself is always rebuilt)
+  if [[ "$pkg" != "caelestia-silicon" ]] && installed_current "$pkg"; then
     echo "==> $pkg is already installed, skipping."
     return 0
   fi
@@ -34,10 +52,10 @@ build_install() {
     return 1
   fi
 
-  # The shell's package under its old name owns the same files (--noconfirm won't swap it out).
-  # -Qq names the package installed: caelestia-silicon answers to the old name too (provides)
-  if [[ $pkg == caelestia-silicon && $(pacman -Qq caelestia-omarchy-mac 2>/dev/null) == caelestia-omarchy-mac ]]; then
-    sudo pacman -Rdd --noconfirm caelestia-omarchy-mac
+  # -Qq names the package installed: ours answer to the names they replace too (provides)
+  local old=${replaces[$pkg]:-}
+  if [[ -n $old && $(pacman -Qq "$old" 2>/dev/null) == "$old" ]]; then
+    sudo pacman -Rdd --noconfirm "$old"
   fi
 
   sudo pacman -U --noconfirm "$pkg_file"
@@ -45,7 +63,7 @@ build_install() {
 
 # Dependencies first: each later package needs the earlier ones installed to build
 # mise-bin installs the coding agent picked in Settings > Apps > Agent (Omarchy already has it)
-for pkg in libcava qt6-m3shapes-git ttf-rubik-vf python-materialyoucolor quickshell-caelestia caelestia-cli mise-bin; do
+for pkg in libcava qt6-m3shapes-git ttf-rubik-vf python-materialyoucolor quickshell-caelestia caelestia-cli qmltermwidget-caelestia mise-bin; do
   # Any mise will do (another package, or mise's own installer); a second one would conflict
   [[ $pkg == mise-bin ]] && command -v mise &>/dev/null && { echo "==> mise is already installed, skipping."; continue; }
   build_install "$pkg"
@@ -107,6 +125,36 @@ install_smi_driver || echo "warning: the SMI USB display driver could not be set
 # Touch Bar layout with media keys and a screenshot key, as the Witcher's Tweaks set it up (MacBooks
 # running tiny-dfr; skipped without it)
 "$packaging/extras/install-touchbar.sh" || echo "warning: the Touch Bar layout could not be installed (see above)" >&2
+
+# Fan control (the bar's fan popout): the fan driver, macsmc_hwmon, is built into the Asahi kernel
+# and only takes speeds with macsmc_hwmon.fan_control=1 on the kernel command line (in GRUB's
+# options here); the udev rule lets the wheel group write them. Apple Silicon only. A changed
+# command line takes effect at the next boot.
+install_fan_control() {
+  [[ -d /sys/module/macsmc_hwmon ]] || return 0
+  sudo install -Dm644 "$packaging/90-caelestia-fans.rules" /etc/udev/rules.d/90-caelestia-fans.rules
+  sudo udevadm control --reload
+  sudo udevadm trigger --subsystem-match=hwmon --action=change || true
+
+  local grub=/etc/default/grub option=macsmc_hwmon.fan_control=1
+  [[ $(cat /sys/module/macsmc_hwmon/parameters/fan_control 2>/dev/null) == Y ]] && grep -qs "$option" "$grub" && return 0
+  if [[ ! -f $grub ]]; then
+    echo "Fan control: no $grub here; add $option to the kernel options and reboot to set fan speeds" >&2
+    return 0
+  fi
+  if ! grep -q "^GRUB_CMDLINE_LINUX_DEFAULT=.*$option" "$grub"; then
+    sudo cp "$grub" "$grub.bak.$(date +%s)"
+    if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="' "$grub"; then
+      sudo sed -i -E "s/^(GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*)\"/\1 $option\"/" "$grub"
+    else
+      echo "GRUB_CMDLINE_LINUX_DEFAULT=\"$option\"" | sudo tee -a "$grub" >/dev/null
+    fi
+    sudo grub-mkconfig -o /boot/grub/grub.cfg
+  fi
+  [[ $(cat /sys/module/macsmc_hwmon/parameters/fan_control 2>/dev/null) == Y ]] ||
+    echo "==> Fan control is set up: reboot to set fan speeds (they're read-only until then)."
+}
+install_fan_control || echo "warning: fan control could not be set up (see above)" >&2
 
 "$packaging/link-omarchy-wallpapers.sh"
 # Without Omarchy, also install a full Hyprland config, a polkit agent and GTK/Qt theming

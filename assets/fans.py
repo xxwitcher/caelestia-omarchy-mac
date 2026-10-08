@@ -3,6 +3,8 @@
 macsmc_hwmon driver.
 
   fans.py read            print the fans and temperature sensors as JSON
+  fans.py watch SECONDS   print them as a JSON line every SECONDS, until stopped
+                          (one process for the shell to read, rather than one per reading)
   fans.py set N RPM       run fan N at RPM (between its min and max)
   fans.py set N auto      hand fan N back to the SMC
 
@@ -15,6 +17,7 @@ import glob
 import json
 import os
 import sys
+import time
 
 SMC_NAME = "macsmc_hwmon"
 PARAM = "/sys/module/macsmc_hwmon/parameters/fan_control"
@@ -84,14 +87,28 @@ def temps():
     return out
 
 
-def cmd_read():
+def snapshot():
     hwmon = smc_hwmon()
-    print(json.dumps({
+    return json.dumps({
         "present": hwmon is not None,
         "control": read(PARAM) == "Y",
         "fans": fans(hwmon),
         "temps": temps(),
-    }))
+    })
+
+
+def cmd_read():
+    print(snapshot())
+
+
+def cmd_watch(seconds):
+    try:
+        while True:
+            print(snapshot(), flush=True)
+            time.sleep(seconds)
+    except (BrokenPipeError, KeyboardInterrupt):
+        # The reader went away: nothing left to flush to
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
 
 
 def cmd_set(n, value):
@@ -111,6 +128,8 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if args == ["read"]:
         cmd_read()
+    elif len(args) == 2 and args[0] == "watch":
+        cmd_watch(max(0.5, float(args[1])))
     elif len(args) == 3 and args[0] == "set":
         cmd_set(args[1], args[2])
     else:

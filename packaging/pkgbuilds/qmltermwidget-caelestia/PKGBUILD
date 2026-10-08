@@ -1,0 +1,37 @@
+# QMLTermWidget (the terminal in the dashboard's Agent tab) with Caelestia-Silicon's patches
+# (caelestia.patch): at most ~30 screen updates a second, since every update redraws the shell's
+# full-screen surface, and a full repaint when it's put in a window or shown again (a partial one
+# left the new texture magenta). Based on Arch's qmltermwidget PKGBUILD, same upstream commit.
+
+pkgname=qmltermwidget-caelestia
+_pkgname=qmltermwidget
+_commit=ce8e09ad4daeb9fe59b60d6b228b0f7cf4055e16
+pkgver=2.0.0.git1
+pkgrel=1
+pkgdesc='QML port of qtermwidget, patched for Caelestia-Silicon'
+arch=('x86_64' 'aarch64')
+url='https://github.com/Swordfish90/qmltermwidget'
+license=('GPL-2.0-only')
+depends=('qt6-declarative')
+provides=("$_pkgname=$pkgver")
+conflicts=("$_pkgname")
+source=("$_pkgname-$_commit.tar.gz::https://github.com/Swordfish90/qmltermwidget/archive/$_commit.tar.gz"
+        'caelestia.patch')
+sha256sums=('928b7791269f275d953ef0a38d14d1b7196654812243e9cf7b03975b12022c76'
+            '09e60e2536c7983b9962cc156edc389aaf3916db72b13163136727ea4b8bf729')
+
+prepare() {
+  cd "$_pkgname-$_commit"
+  patch -Np1 -i ../caelestia.patch
+}
+
+build() {
+  cd "$_pkgname-$_commit"
+  qmake6
+  make
+}
+
+package() {
+  cd "$_pkgname-$_commit"
+  make INSTALL_ROOT="$pkgdir" install -j1
+}

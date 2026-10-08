@@ -92,9 +92,9 @@ Item {
         Qt.callLater(root.repaint);
     }
 
-    // Moved or resized, the terminal's picture starts out empty (magenta, or blank) and only fills
-    // in when the agent prints or it's clicked: copy the session's screen into it, once the move
-    // or resize has settled
+    // Its picture is only brought up to date when the agent prints: bring it up to date now, so
+    // an idle agent's screen shows straight away (qmltermwidget-caelestia repaints all of it in
+    // the new window, rather than only what changed)
     function repaint(): void {
         if (!terminal || terminal.parent !== terminalFrame)
             return;
@@ -262,8 +262,6 @@ Item {
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.medium
 
-                onWidthChanged: Qt.callLater(root.repaint)
-                onHeightChanged: Qt.callLater(root.repaint)
             }
 
             StyledText {

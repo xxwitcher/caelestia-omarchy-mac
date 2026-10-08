@@ -854,13 +854,17 @@ def main() -> int:
   parser.add_argument("--force", action="store_true", help="rescan transcripts and re-probe limits, ignoring caches")
   parser.add_argument("--limits-only", action="store_true", help="reuse any recent transcript scan; only the limits probe must be fresh")
   parser.add_argument("--cache-seconds", type=float, default=20)
+  # Caelestia: the Agent tab shows the plan and the limits only. Totalling every transcript (hundreds
+  # of MB of JSON, re-read in full once the scan cache is 15 minutes old) cost more CPU than the
+  # rest of the shell; skip it
+  parser.add_argument("--no-stats", action="store_true", help="skip the transcript totals: plan and limits only")
   args = parser.parse_args()
 
   claude_dir = config_dir()
   scan_age = 0 if args.force else (900 if args.limits_only else args.cache_seconds)
-  stats = cached_scan(claude_dir / "projects", scan_age)
+  stats = {} if args.no_stats else cached_scan(claude_dir / "projects", scan_age)
 
-  if number(stats.get("totalPrompts")) <= 0:
+  if not args.no_stats and number(stats.get("totalPrompts")) <= 0:
     fallback = stats_cache_fallback(claude_dir)
     if fallback is not None:
       stats = fallback
@@ -871,11 +875,11 @@ def main() -> int:
       if today_prompts or today_sessions:
         stats = dict(stats, todayPrompts=today_prompts, todaySessions=today_sessions)
 
-  pi_usage = scan_pi_usage(scan_age)
+  pi_usage = None if args.no_stats else scan_pi_usage(scan_age)
   if pi_usage is not None:
     stats = merge_stats(stats, pi_usage)
 
-  opencode = scan_opencode_usage(scan_age)
+  opencode = None if args.no_stats else scan_opencode_usage(scan_age)
   if opencode is not None:
     stats = merge_stats(stats, opencode)
 
@@ -888,7 +892,7 @@ def main() -> int:
     "name": AGENT_NAME,
     "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
     "ready": number(stats.get("totalPrompts")) > 0 or len(limits["limits"]) > 0,
-    "hasLocalStats": True,
+    "hasLocalStats": not args.no_stats,
     "tierLabel": plan,
     "usageStatusText": limits["usageStatusText"],
     "authHelpText": limits["authHelpText"],

@@ -87,9 +87,14 @@ Singleton {
     }
 
     // Opening the tab wants the numbers that go stale on the wire, not another scan of every
-    // transcript: the collectors reuse their recent scans in this mode
+    // transcript: the collectors reuse their recent scans in this mode. At most once a minute:
+    // each run starts Python and asks the agent's servers, and switching tabs shows it again
+    property real limitsCheckedAt
     function refreshLimits(): void {
         active = true;
+        if (Date.now() - limitsCheckedAt < 60000)
+            return;
+        limitsCheckedAt = Date.now();
         run(["--limits-only"]);
     }
 
@@ -104,7 +109,8 @@ Singleton {
         const agents = (ids ?? [defaultAgent]).filter(id => tracked.includes(id));
         if (agents.length === 0)
             return;
-        const command = [`${scriptDir}/usage-update.sh`, ...flags, ...agents];
+        // The tab only shows the plan and the limits: --no-stats skips totalling the transcripts
+        const command = [`${scriptDir}/usage-update.sh`, "--no-stats", ...flags, ...agents];
         if (updater.running) {
             queued = command;
             return;

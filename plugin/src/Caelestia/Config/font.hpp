@@ -1,5 +1,6 @@
 #pragma once
 
+#include <qlist.h>
 #include <qobject.h>
 #include <qqmlintegration.h>
 #include <qvariantmap.h>
@@ -73,6 +74,10 @@ protected:
     static QFont buildFont(const settings::ObjectNode* cfg, const QString& fallbackFamily, qreal scale);
 
     settings::ObjectNode* m_cfg = nullptr;
+    // Disconnecting by sender (disconnect(m_cfg, nullptr, this, nullptr)) searches every
+    // connection the shared config nodes have, one per Tokens of every item: with hundreds of
+    // items that made building a panel slow. These are disconnected one by one instead.
+    QList<QMetaObject::Connection> m_connections;
     qreal m_scale = 1;
     QFont m_large;
     QFont m_medium;
@@ -116,6 +121,7 @@ protected:
 
 private:
     QFont m_extraLarge;
+    QMetaObject::Connection m_extraLargeConnection;
     IconFontBuilders* m_builders;
 };
 
@@ -155,6 +161,7 @@ private:
     void rebuildScale();
 
     AppearanceFont* m_font = nullptr;
+    QList<QMetaObject::Connection> m_fontConnections;
     FontStyle* m_headline;
     FontStyle* m_title;
     FontStyle* m_body;

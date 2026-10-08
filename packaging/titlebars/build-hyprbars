@@ -1,7 +1,7 @@
 #!/bin/bash
 # Builds the hyprbars plugin (hyprwm/hyprland-plugins) for the running
 # Hyprland, from the plugins commit hyprpm.toml pins for it, into
-# ~/.local/share/witchers-tweaks/hyprbars/hyprbars.so. Hyprland only loads a
+# ~/.local/share/caelestia/hyprbars/hyprbars.so. Hyprland only loads a
 # plugin built from its own headers, so the result is checked against the
 # running version before it's put in place.
 #

@@ -580,10 +580,12 @@ def main():
   # collector runs.
   parser.add_argument("--force", action="store_true")
   parser.add_argument("--limits-only", action="store_true")
+  # Caelestia: the Agent tab shows the plan and the limits only; skip the session totals
+  parser.add_argument("--no-stats", action="store_true")
   args = parser.parse_args()
 
   max_age = 0 if args.force else (LIMITS_ONLY_REUSE_SECONDS if args.limits_only else SCAN_REUSE_SECONDS)
-  stats = cached_local_stats(max_age)
+  stats = {} if args.no_stats else cached_local_stats(max_age)
   rpc = fetch_codex_rpc()
 
   record = {
@@ -592,7 +594,7 @@ def main():
     "name": AGENT_NAME,
     "updatedAt": datetime.now(timezone.utc).isoformat(),
     "ready": True,
-    "hasLocalStats": True,
+    "hasLocalStats": not args.no_stats,
   }
   record.update(stats)
   record.update(rpc)
