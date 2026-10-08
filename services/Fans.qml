@@ -26,7 +26,11 @@ Singleton {
     readonly property bool live: watchers > 0 || fans.some(f => config(f.n).mode === "range")
     readonly property int interval: live ? 2 : 10
     onIntervalChanged: {
-        // A new interval needs a new fans.py: stop this one (onExited starts the next)
+        // A new interval needs a new fans.py: stop this one (onExited starts the next). Only a
+        // running one: running = false before it has started (during the shell's start) cancels
+        // the start, and nothing would start it again
+        if (!readProc.running)
+            return;
         restarting = true;
         readProc.running = false;
     }

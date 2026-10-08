@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Widgets
 import Caelestia.Config
 import Caelestia.I18n
@@ -14,7 +13,7 @@ import qs.modules.launcher.services
 
 // App drawer: apps as a grid of icons, filtered by the search text. Drag one to the dock to pin it.
 // Right click for its menu, as in the Witcher's Tweaks app drawer: Open, Keep in Dock, Open at
-// Login and Remove… (asks first, then uninstalls it; assets/remove-app.sh).
+// Login and Remove… (asks first, then uninstalls it: Installer.remove).
 GridView {
     id: root
 
@@ -76,11 +75,7 @@ GridView {
                 label: Tr.tr("Remove %1").arg(entry.name),
                 icon: "delete_forever",
                 action: () => {
-                    // A package or flatpak is uninstalled in the shell's terminal (the overlay),
-                    // where it asks for the password and to confirm
-                    remover.appName = entry.name;
-                    remover.command = [`${Quickshell.shellDir}/assets/remove-app.sh`, entry.id, entry.name];
-                    remover.running = true;
+                    Installer.remove(entry);
                     root.screenState.launcher = false;
                 }
             },
@@ -168,22 +163,6 @@ GridView {
             elide: Text.ElideRight
             text: app.modelData.name
             font: Tokens.font.label.medium
-        }
-    }
-
-    // assets/remove-app.sh: removes a launcher of yours itself, or prints "run <command>" for the
-    // terminal (a package's or flatpak's uninstall)
-    Process {
-        id: remover
-
-        property string appName
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const run = text.match(/^run (.*)$/m);
-                if (run)
-                    ShellState.componentsForActive()?.panels?.popouts.showTerminal(Tr.tr("Removing %1").arg(remover.appName), run[1]);
-            }
         }
     }
 

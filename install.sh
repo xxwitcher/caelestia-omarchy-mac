@@ -8,7 +8,7 @@ packaging="$here/packaging"
 pkgbuilds="$packaging/pkgbuilds"
 
 sudo pacman -S --needed vulkan-headers cli11 ninja cmake git aubio libqalculate \
-  ttf-material-symbols-variable ttf-cascadia-code-nerd papirus-icon-theme swappy fish dart-sass cliphist fuzzel \
+  ttf-material-symbols-variable ttf-cascadia-code-nerd papirus-icon-theme swappy dart-sass cliphist fuzzel \
   python-build python-installer python-hatch python-hatch-vcs pybind11 meson autoconf-archive wf-recorder \
   hyprsunset adw-gtk-theme python-gobject jq pacman-contrib xdg-utils
 
@@ -198,6 +198,31 @@ PY
   fi
 }
 install_witcher_theme || echo "warning: the Witcher colour theme could not be added (see above)" >&2
+
+# Web app windows without scrollbars (assets/webapp-window), loaded by Chromium when it starts.
+# Chromium takes one --load-extension line (a second replaces the first), so it joins that line.
+add_webapp_extension() {
+  local flags="${XDG_CONFIG_HOME:-$HOME/.config}/chromium-flags.conf"
+  local ext=/etc/xdg/quickshell/caelestia/assets/webapp-window
+  if ! grep -qs '^--load-extension=' "$flags"; then
+    mkdir -p "$(dirname "$flags")"
+    echo "--load-extension=$ext" >>"$flags"
+  elif ! grep -q "^--load-extension=\(.*,\)\?$ext\(,\|$\)" "$flags"; then
+    sed -i "s|^--load-extension=.*|&,$ext|" "$flags"
+  fi
+}
+add_webapp_extension || echo "warning: the web app extension could not be added to Chromium (see above)" >&2
+
+# Google account sign-in (and sync) in Chromium: Google only allows it for Chrome, so Chromium
+# signs in with Chrome's own OAuth client, which every copy of Chrome carries (as Omarchy does)
+add_chromium_google_account() {
+  local flags="${XDG_CONFIG_HOME:-$HOME/.config}/chromium-flags.conf" line
+  mkdir -p "$(dirname "$flags")"
+  for line in --oauth2-client-id=77185425430.apps.googleusercontent.com --oauth2-client-secret=OTJgUOQcT7lO7GsGZq2G4IlT; do
+    grep -qsxF -- "$line" "$flags" || echo "$line" >>"$flags"
+  done
+}
+add_chromium_google_account || echo "warning: Google sign-in could not be added to Chromium (see above)" >&2
 
 # Instructions and rules for coding agents (the Agent tab, SUPER + A), written for this system
 "$here/install-agent-skills.sh" || echo "warning: the agent skills could not be installed (see above)" >&2

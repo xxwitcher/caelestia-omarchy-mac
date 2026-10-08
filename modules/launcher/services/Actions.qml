@@ -24,7 +24,9 @@ Searcher {
 
         model: {
             const enableDangerous = GlobalConfig.launcher.enableDangerousActions;
-            return GlobalConfig.launcher.actions.values.filter(a => a.enabled && (enableDangerous || !a.dangerous));
+            // Variant only changes the From wallpaper (dynamic) scheme
+            const variants = Colours.scheme === "dynamic";
+            return GlobalConfig.launcher.actions.values.filter(a => a.enabled && (enableDangerous || !a.dangerous) && (variants || a.command[0] !== "autocomplete" || a.command[1] !== "variant"));
         }
 
         Action {}

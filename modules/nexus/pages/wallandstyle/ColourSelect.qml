@@ -137,6 +137,22 @@ PageBase {
             }
         }
 
+        // How the From wallpaper scheme builds its palette (also the launcher's >variant)
+        ChoiceRow {
+            Layout.topMargin: Tokens.spacing.small
+            visible: Colours.scheme === "dynamic"
+            first: true
+            last: true
+            icon: "colors"
+            label: Tr.tr("Variant")
+            options: Launcher.M3Variants.list.map(v => ({
+                        value: v.variant,
+                        label: v.name
+                    }))
+            current: Launcher.Schemes.currentVariant
+            onChosen: v => root.setScheme(["-v", v])
+        }
+
         SectionHeader {
             text: Tr.tr("Scheme colours")
         }

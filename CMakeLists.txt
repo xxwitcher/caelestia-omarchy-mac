@@ -72,7 +72,8 @@ if("shell" IN_LIST ENABLE_MODULES)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
 
-    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/scheme-overrides.py assets/portal-filechooser.py
+    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/install-webapp.sh assets/launch-webapp.sh
+        assets/scheme-overrides.py assets/portal-filechooser.py
         DESTINATION "${INSTALL_QSCONFDIR}/assets")
 
     # Caelestia's file picker for every app that asks the desktop for one: an xdg-desktop-portal

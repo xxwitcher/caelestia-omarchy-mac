@@ -32,8 +32,9 @@ On top of Caelestia's bar, launcher, dashboard, sidebar, notifications, lock scr
 -   **Trackpad gestures**: 3-finger swipe between workspaces, and up or down for the overview.
 -   **Coding agents**: an agent terminal in the shell (<kbd>SUPER</kbd> + <kbd>A</kbd>), with skills
     that teach agents about this system.
--   **Updates and apps**: pending updates in Settings, and uninstalling apps from the app drawer in
-    an in-shell terminal.
+-   **Updates and apps**: pending updates in Settings; `>install` in the launcher adds a web app or
+    a package, and `>uninstall` (or the app drawer's Remove…) removes an app, packages through an
+    in-shell terminal.
 
 ## Requirements
 
@@ -544,6 +545,22 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
                 "dangerous": false
             },
             {
+                "name": "Install",
+                "icon": "download",
+                "description": "Add a web app or a package",
+                "command": ["autocomplete", "install"],
+                "enabled": true,
+                "dangerous": false
+            },
+            {
+                "name": "Uninstall",
+                "icon": "delete",
+                "description": "Remove an app",
+                "command": ["autocomplete", "uninstall"],
+                "enabled": true,
+                "dangerous": false
+            },
+            {
                 "name": "Scheme",
                 "icon": "palette",
                 "description": "Change the current colour scheme",
@@ -571,7 +588,7 @@ For example, to automatically hide the bar on the monitor named `DP-1`:
                 "name": "Random",
                 "icon": "casino",
                 "description": "Switch to a random wallpaper",
-                "command": ["caelestia", "wallpaper", "-r"],
+                "command": ["caelestia", "wallpaper", "-r", "-n"],
                 "enabled": true,
                 "dangerous": false
             },

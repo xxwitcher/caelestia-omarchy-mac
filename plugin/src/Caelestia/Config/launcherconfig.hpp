@@ -61,6 +61,18 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"command"_s, QStringList{ u"autocomplete"_s, u"calc"_s } },
             }),
             vmap({
+                { u"name"_s, markCtx(u"Install"_s, u"launcher action"_s) },
+                { u"icon"_s, u"download"_s },
+                { u"description"_s, mark(u"Add a web app or a package"_s) },
+                { u"command"_s, QStringList{ u"autocomplete"_s, u"install"_s } },
+            }),
+            vmap({
+                { u"name"_s, markCtx(u"Uninstall"_s, u"launcher action"_s) },
+                { u"icon"_s, u"delete"_s },
+                { u"description"_s, mark(u"Remove an app"_s) },
+                { u"command"_s, QStringList{ u"autocomplete"_s, u"uninstall"_s } },
+            }),
+            vmap({
                 { u"name"_s, markCtx(u"Scheme"_s, u"launcher action"_s) },
                 { u"icon"_s, u"palette"_s },
                 { u"description"_s, mark(u"Change the current colour scheme"_s) },
@@ -82,7 +94,7 @@ class LauncherConfig : public settings::ObjectNode {
                 { u"name"_s, markCtx(u"Random"_s, u"launcher action"_s) },
                 { u"icon"_s, u"casino"_s },
                 { u"description"_s, mark(u"Switch to a random wallpaper"_s) },
-                { u"command"_s, QStringList{ u"caelestia"_s, u"wallpaper"_s, u"-r"_s } },
+                { u"command"_s, QStringList{ u"caelestia"_s, u"wallpaper"_s, u"-r"_s, u"-n"_s } },
             }),
             vmap({
                 { u"name"_s, markCtx(u"Light"_s, u"launcher action"_s) },

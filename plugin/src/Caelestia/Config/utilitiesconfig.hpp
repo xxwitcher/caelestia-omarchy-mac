@@ -72,7 +72,7 @@ class UtilitiesConfig : public settings::ObjectNode {
             LIST_ENTRY(settings, true),
             LIST_ENTRY(gameMode, true),
             LIST_ENTRY(dnd, true),
-            LIST_ENTRY(vpn, false),
+            LIST_ENTRY(vpn, true), // Hidden anyway until a VPN provider is selected
         }))
 };
 

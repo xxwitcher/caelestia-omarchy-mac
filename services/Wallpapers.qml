@@ -29,8 +29,9 @@ Searcher {
         return category;
     }
 
+    // Any wallpaper the settings page shows, whatever its size (-n)
     function setRandom(): void {
-        Quickshell.execDetached(["caelestia", "wallpaper", "-r", ...smartArg]);
+        Quickshell.execDetached(["caelestia", "wallpaper", "-r", "-n", ...smartArg]);
     }
 
     function setWallpaper(path: string): void {

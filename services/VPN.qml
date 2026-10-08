@@ -74,7 +74,8 @@ Singleton {
             connectHint: adapter ? adapter.connectHint : null,
             registerCmd: adapter ? adapter.registerCmd : null,
             serverCmd: adapter ? adapter.serverCmd : null,
-            parseServer: adapter ? adapter.parseServer : null
+            parseServer: adapter ? adapter.parseServer : null,
+            ownToasts: adapter ? adapter.ownToasts : false
         };
     }
 
@@ -83,7 +84,14 @@ Singleton {
     readonly property string interfaceName: active.interface
     readonly property var currentConfig: active
 
-    readonly property var adapters: [wireguardAdapter, warpAdapter, netbirdAdapter, tailscaleAdapter]
+    readonly property var adapters: [wireguardAdapter, warpAdapter, netbirdAdapter, tailscaleAdapter, nordvpnAdapter]
+
+    // The name a provider is shown by: its own display name, a built-in one's, or its id
+    function displayNameFor(provider: var): string {
+        const adapter = adapters.find(a => a.name === provider.name);
+        const display = adapter ? (typeof adapter.display === "function" ? adapter.display(provider.interface || adapter.iface) : adapter.display) : "";
+        return provider.displayName || display || provider.name;
+    }
 
     // Live list of configured providers, straight from the typed config list.
     // Each entry is a config node with id/name/displayName/interface and the
@@ -338,6 +346,26 @@ Singleton {
         return status;
     }
 
+    // `nordvpn status`: "Status: Connected", then "Server: United Kingdom #6000", "City: …",
+    // "Country: …" and more; just "Status: Disconnected" otherwise
+    function parseNordVpnStatus(output: string): var {
+        const status = {
+            connected: false,
+            state: "disconnected",
+            reason: "",
+            authUrl: "",
+            server: ""
+        };
+        const field = name => (output.match(new RegExp(`^\\s*${name}:\\s*(.+)$`, "mi")) ?? [])[1]?.trim() ?? "";
+
+        if (field("Status") === "Connected") {
+            status.connected = true;
+            status.state = "connected";
+            status.server = field("Server") || field("Hostname");
+        }
+        return status;
+    }
+
     function parseWarpStatus(output: string): var {
         const status = {
             connected: false,
@@ -448,6 +476,11 @@ Singleton {
             return;
 
         const displayName = active.displayName || Tr.tr("VPN");
+        // A provider that announces connecting and disconnecting itself (NordVPN) isn't
+        // announced twice; its sign-in and error problems still are
+        const ownToast = active.ownToasts && (statusObj.state === "connected" || statusObj.state === "disconnected");
+        if (ownToast)
+            return;
 
         switch (statusObj.state) {
         case "connected":
@@ -599,6 +632,25 @@ Singleton {
         parse: out => root.parseTailscaleStatus(out)
         // TRANSLATORS: %1 = a shell command, leave it untranslated
         connectHint: error => error.includes("Access denied") || error.includes("checkprefs access denied") ? Tr.mark("Permission denied. Run in terminal: %1", ["sudo tailscale set --operator=$USER"]) : ""
+    }
+
+    Adapter {
+        id: nordvpnAdapter
+
+        name: "nordvpn"
+        display: "NordVPN"
+        // NordLynx, NordVPN's default technology (OpenVPN would be nordtun)
+        iface: "nordlynx"
+        service: "nordvpnd"
+        ownToasts: true // Its own notifications (nordvpn set notify on/off)
+        // Its messages go to stderr for connectHint; links in them are dropped so they aren't
+        // taken for a sign-in address
+        connectCmd: ["bash", "-c", "set -o pipefail; nordvpn connect 2>&1 | sed -E 's#https?://[^[:space:]]+##g' >&2"]
+        disconnectCmd: ["nordvpn", "disconnect"]
+        statusCmd: ["nordvpn", "status"]
+        parse: out => root.parseNordVpnStatus(out)
+        // TRANSLATORS: %1 = a shell command, leave it untranslated
+        connectHint: error => error.includes("not logged in") ? Tr.mark("Not logged in. Run in terminal: %1", ["nordvpn login"]) : error.includes("Permission denied") ? Tr.mark("Permission denied. Run in terminal: %1, then log out and in", ["sudo usermod -aG nordvpn $USER"]) : ""
     }
 
     // ── Generic engine ──────────────────────────────────────────────────────
@@ -834,5 +886,7 @@ Singleton {
         property var registerCmd
         property var serverCmd
         property var parseServer
+        // The provider shows its own connected / disconnected notifications
+        property bool ownToasts
     }
 }

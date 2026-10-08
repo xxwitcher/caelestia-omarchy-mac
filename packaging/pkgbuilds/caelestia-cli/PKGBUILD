@@ -4,7 +4,7 @@
 
 pkgname='caelestia-cli'
 pkgver=1.1.3
-pkgrel=1
+pkgrel=2
 pkgdesc='The main cli for the Caelestia dotfiles'
 arch=('any')
 url='https://github.com/caelestia-dots/cli'
@@ -28,6 +28,8 @@ prepare() {
     sed -i 's/"qs"/"caelestia-qs"/g' src/caelestia/subcommands/shell.py src/caelestia/subcommands/screenshot.py src/caelestia/utils/version.py
     # Caelestia-Silicon: record with wf-recorder on Apple Silicon, where gpu-screen-recorder cannot capture
     patch -p1 -i "$srcdir/apple-silicon-recording.patch"
+    # Caelestia-Silicon: follow linked wallpaper folders when picking a random wallpaper
+    sed -i 's/directory.rglob("\*")/directory.rglob("*", recurse_symlinks=True)/' src/caelestia/utils/wallpaper.py
 }
 
 build() {

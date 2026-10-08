@@ -1,4 +1,6 @@
 import QtQuick
+import Quickshell
+import Quickshell.Widgets
 import Caelestia.Config
 import qs.components
 import qs.services
@@ -25,13 +27,32 @@ Item {
         anchors.rightMargin: Tokens.padding.medium
         anchors.margins: Tokens.padding.small
 
-        MaterialIcon {
+        // An app's own icon (appIcon: >uninstall), otherwise a symbol
+        Loader {
             id: icon
 
             anchors.verticalCenter: parent.verticalCenter
-            text: root.modelData?.icon ?? ""
-            color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.builders.large.scale(1.3).build()
+            sourceComponent: root.modelData?.appIcon ? appIcon : symbol
+        }
+
+        Component {
+            id: symbol
+
+            MaterialIcon {
+                text: root.modelData?.icon ?? ""
+                color: Colours.palette.m3onSurfaceVariant
+                fontStyle: Tokens.font.icon.builders.large.scale(1.3).build()
+            }
+        }
+
+        Component {
+            id: appIcon
+
+            IconImage {
+                asynchronous: true
+                source: Quickshell.iconPath(root.modelData?.appIcon, "image-missing")
+                implicitSize: (root.implicitHeight - Tokens.padding.small * 2) * 0.8
+            }
         }
 
         Item {

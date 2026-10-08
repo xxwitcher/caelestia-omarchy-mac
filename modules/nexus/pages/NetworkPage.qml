@@ -235,7 +235,7 @@ PageBase {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: provider.modelData.displayName || provider.modelData.name
+                            text: VPN.displayNameFor(provider.modelData)
                             font: Tokens.font.body.medium
                             elide: Text.ElideRight
                         }

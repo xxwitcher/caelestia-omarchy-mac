@@ -293,7 +293,10 @@ if style.titlebars ~= "0" then
         on_double_click = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\" })'",
       } } })
       hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
-      hl.window_rule({ match = { fullscreen = true }, ["hyprbars:no_bar"] = true })
+      -- Only floating ones (a maximized one would sit below the strip): leaving fullscreen drops
+      -- this rule's no_bar and with it the float = false one's, which isn't checked again, so a
+      -- tiled window matching this came back from fullscreen 14 px lower
+      hl.window_rule({ match = { float = true, fullscreen = true }, ["hyprbars:no_bar"] = true })
       hl.window_rule({ match = { class = dialog_class }, ["hyprbars:no_bar"] = true })
       hl.window_rule({ match = { title = dialog_title }, ["hyprbars:no_bar"] = true })
     end

@@ -27,7 +27,7 @@ Item {
         anchors.centerIn: parent
 
         text: "power_settings_new"
-        color: Colours.palette.m3error
+        color: Colours.palette.m3secondary // Highlights, like the status icons and clock
         fontStyle: Tokens.font.icon.builders.small.weight(Font.Bold).build()
     }
 }

@@ -7,6 +7,8 @@ import Quickshell.Widgets
 import Caelestia.Config
 import Caelestia.I18n
 import qs.components
+import qs.components.containers
+import qs.components.controls
 import qs.services
 
 StackView {
@@ -47,7 +49,12 @@ StackView {
         property bool isSubMenu
         property bool shown
 
-        padding: Tokens.padding.small
+        // A long menu (a VPN's server list) scrolls within this; the entries' hover highlights
+        // reach into the side padding, so that padding is inside the scrolling area
+        readonly property real maxEntriesHeight: Math.min(Tokens.sizes.bar.trayMenuWidth * 1.6, (QsWindow.window?.screen?.height ?? 800) * 0.6)
+
+        topPadding: Tokens.padding.small - Tokens.padding.extraSmall / 2
+        bottomPadding: Tokens.padding.small
         spacing: Tokens.spacing.small
 
         opacity: shown ? 1 : 0
@@ -74,102 +81,125 @@ StackView {
             menu: menu.handle
         }
 
-        Repeater {
-            model: menuOpener.children
+        StyledFlickable {
+            id: entriesView
 
-            StyledRect {
-                id: item
+            implicitWidth: entries.implicitWidth
+            implicitHeight: Math.min(entries.implicitHeight, menu.maxEntriesHeight)
+            contentHeight: entries.implicitHeight
+            clip: true
 
-                required property QsMenuEntry modelData
+            StyledScrollBar.vertical: StyledScrollBar {
+                flickable: entriesView
+            }
 
-                implicitWidth: Tokens.sizes.bar.trayMenuWidth
-                implicitHeight: modelData.isSeparator ? 1 : children.implicitHeight
+            Column {
+                id: entries
 
-                radius: Tokens.rounding.full
-                color: modelData.isSeparator ? Colours.palette.m3outlineVariant : "transparent"
+                leftPadding: Tokens.padding.small
+                rightPadding: Tokens.padding.small
+                topPadding: Tokens.padding.extraSmall / 2
+                bottomPadding: Tokens.padding.extraSmall / 2
+                spacing: Tokens.spacing.small
 
-                Loader {
-                    id: children
+                Repeater {
+                    model: menuOpener.children
 
-                    asynchronous: true
-                    anchors.left: parent.left
-                    anchors.right: parent.right
+                    StyledRect {
+                        id: item
 
-                    active: !item.modelData.isSeparator
+                        required property QsMenuEntry modelData
 
-                    sourceComponent: Item {
-                        implicitHeight: label.implicitHeight
+                        implicitWidth: Tokens.sizes.bar.trayMenuWidth
+                        implicitHeight: modelData.isSeparator ? 1 : children.implicitHeight
 
-                        StateLayer {
-                            anchors.margins: -Tokens.padding.extraSmall / 2
-                            anchors.leftMargin: -Tokens.padding.small
-                            anchors.rightMargin: -Tokens.padding.small
-
-                            radius: item.radius
-                            disabled: !item.modelData.enabled
-
-                            onClicked: {
-                                const entry = item.modelData;
-                                if (entry.hasChildren)
-                                    root.push(subMenuComp.createObject(null, {
-                                        handle: entry,
-                                        isSubMenu: true
-                                    }));
-                                else {
-                                    item.modelData.triggered();
-                                    root.popouts.hasCurrent = false;
-                                }
-                            }
-                        }
+                        radius: Tokens.rounding.full
+                        color: modelData.isSeparator ? Colours.palette.m3outlineVariant : "transparent"
 
                         Loader {
-                            id: icon
+                            id: children
 
                             asynchronous: true
                             anchors.left: parent.left
-
-                            active: item.modelData.icon !== ""
-
-                            sourceComponent: IconImage {
-                                asynchronous: true
-                                implicitSize: label.implicitHeight
-
-                                source: item.modelData.icon
-                            }
-                        }
-
-                        StyledText {
-                            id: label
-
-                            anchors.left: icon.right
-                            anchors.leftMargin: icon.active ? Tokens.spacing.medium : 0
-
-                            text: labelMetrics.elidedText
-                            color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
-                        }
-
-                        TextMetrics {
-                            id: labelMetrics
-
-                            text: item.modelData.text
-                            font: label.font
-
-                            elide: Text.ElideRight
-                            elideWidth: root.Tokens.sizes.bar.trayMenuWidth - (icon.active ? icon.implicitWidth + label.anchors.leftMargin : 0) - (expand.active ? expand.implicitWidth + root.Tokens.spacing.medium : 0)
-                        }
-
-                        Loader {
-                            id: expand
-
-                            asynchronous: true
-                            anchors.verticalCenter: parent.verticalCenter
                             anchors.right: parent.right
 
-                            active: item.modelData.hasChildren
+                            active: !item.modelData.isSeparator
 
-                            sourceComponent: MaterialIcon {
-                                text: "chevron_right"
-                                color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                            sourceComponent: Item {
+                                implicitHeight: label.implicitHeight
+
+                                StateLayer {
+                                    anchors.margins: -Tokens.padding.extraSmall / 2
+                                    anchors.leftMargin: -Tokens.padding.small
+                                    anchors.rightMargin: -Tokens.padding.small
+
+                                    radius: item.radius
+                                    disabled: !item.modelData.enabled
+
+                                    onClicked: {
+                                        const entry = item.modelData;
+                                        if (entry.hasChildren)
+                                            root.push(subMenuComp.createObject(null, {
+                                                handle: entry,
+                                                isSubMenu: true
+                                            }));
+                                        else {
+                                            item.modelData.triggered();
+                                            root.popouts.hasCurrent = false;
+                                        }
+                                    }
+                                }
+
+                                Loader {
+                                    id: icon
+
+                                    asynchronous: true
+                                    anchors.left: parent.left
+
+                                    active: item.modelData.icon !== ""
+
+                                    sourceComponent: IconImage {
+                                        asynchronous: true
+                                        implicitSize: label.implicitHeight
+
+                                        source: item.modelData.icon
+                                    }
+                                }
+
+                                StyledText {
+                                    id: label
+
+                                    anchors.left: icon.right
+                                    anchors.leftMargin: icon.active ? Tokens.spacing.medium : 0
+
+                                    text: labelMetrics.elidedText
+                                    color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                                }
+
+                                TextMetrics {
+                                    id: labelMetrics
+
+                                    text: item.modelData.text
+                                    font: label.font
+
+                                    elide: Text.ElideRight
+                                    elideWidth: root.Tokens.sizes.bar.trayMenuWidth - (icon.active ? icon.implicitWidth + label.anchors.leftMargin : 0) - (expand.active ? expand.implicitWidth + root.Tokens.spacing.medium : 0)
+                                }
+
+                                Loader {
+                                    id: expand
+
+                                    asynchronous: true
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.right: parent.right
+
+                                    active: item.modelData.hasChildren
+
+                                    sourceComponent: MaterialIcon {
+                                        text: "chevron_right"
+                                        color: item.modelData.enabled ? Colours.palette.m3onSurface : Colours.palette.m3outline
+                                    }
+                                }
                             }
                         }
                     }
@@ -182,10 +212,11 @@ StackView {
             active: menu.isSubMenu
 
             sourceComponent: Item {
-                implicitWidth: back.implicitWidth
+                implicitWidth: back.implicitWidth + Tokens.padding.small
                 implicitHeight: back.implicitHeight + Tokens.spacing.extraSmall
 
                 Item {
+                    x: Tokens.padding.small
                     anchors.bottom: parent.bottom
                     implicitWidth: back.implicitWidth
                     implicitHeight: back.implicitHeight

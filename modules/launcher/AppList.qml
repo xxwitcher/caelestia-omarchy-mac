@@ -29,6 +29,8 @@ StyledListView {
     function stateForText(text: string): string {
         const prefix = GlobalConfig.launcher.actionPrefix;
         if (text.startsWith(prefix)) {
+            if (Installer.isInstallText(text))
+                return "install";
             for (const action of ["calc", "scheme", "variant"])
                 if (text.startsWith(`${prefix}${action} `))
                     return action;
@@ -43,6 +45,8 @@ StyledListView {
         switch (stateForText(text)) {
         case "actions":
             return Actions.query(text);
+        case "install":
+            return Installer.results(text);
         case "calc":
             return [0];
         case "scheme":
@@ -101,6 +105,13 @@ StyledListView {
         },
         State {
             name: "actions"
+
+            PropertyChanges {
+                root.delegate: actionItem
+            }
+        },
+        State {
+            name: "install"
 
             PropertyChanges {
                 root.delegate: actionItem
@@ -289,6 +300,7 @@ StyledListView {
 
     Connections {
         function onTextChanged() {
+            Installer.searchChanged(root.search.text);
             root.syncDisplayText();
         }
 
