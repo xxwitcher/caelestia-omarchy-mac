@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Caelestia-Silicon: the Caelestia shell for Apple Silicon (Asahi Linux), built from xxwitcher/caelestia-silicon.
 # Based on the AUR caelestia-shell-git PKGBUILD. Runs on quickshell-caelestia instead of quickshell-git,
 # so any other quickshell (Omarchy's) stays installed.
@@ -88,4 +91,5 @@ build() {
 package() {
     DESTDIR="$pkgdir" cmake --install "$srcdir/build"
     install -Dm644 "$(_srcdir)/LICENSE" "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+    install -Dm644 "$(_srcdir)/NOTICE" "$pkgdir"/usr/share/licenses/$pkgname/NOTICE
 }

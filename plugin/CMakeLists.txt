@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 find_package(Qt6 REQUIRED COMPONENTS ShaderTools Core Qml Gui Quick QuickControls2 Concurrent Sql Network DBus)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(Qalculate IMPORTED_TARGET libqalculate REQUIRED)

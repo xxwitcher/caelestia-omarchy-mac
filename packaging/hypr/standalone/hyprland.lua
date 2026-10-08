@@ -1,3 +1,6 @@
+-- Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+-- SPDX-License-Identifier: GPL-3.0-only
+
 -- Hyprland config for Caelestia on Arch Linux ARM / Asahi without Omarchy.
 -- Installed by install-hypr.sh --standalone. Personal changes: ~/.config/hypr/user.lua,
 -- or the Window style, Displays and Keyboard pages in Caelestia's settings.

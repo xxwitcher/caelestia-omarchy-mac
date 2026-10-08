@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Link every Omarchy theme's backgrounds into Caelestia's wallpaper folder, one category per theme.
 # Safe to re-run: existing links are refreshed, real files and folders are never touched.
 set -euo pipefail

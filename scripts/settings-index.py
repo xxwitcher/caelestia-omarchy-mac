@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Writes modules/nexus/SettingsIndex.qml: every option on the settings pages, for the search.
 
 Pages and their sub-pages come from modules/nexus/PageCompRegistry.qml's allPageComps (component N

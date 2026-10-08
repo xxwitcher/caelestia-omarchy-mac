@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Instructions and rules for coding agents (skills), linked where the agents look for them, the
 # same places Omarchy links its own: ~/.agents, ~/.claude, ~/.codex, ~/.pi (and ~/.gemini, ~/.hermes
 # when those agents are set up). Each skill is written for this system: the agents/skills sources

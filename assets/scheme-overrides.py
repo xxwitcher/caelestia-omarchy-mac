@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Colours picked one by one in Settings > Wallpaper & style > Colours, on top of the scheme.
 
 The overrides are kept per scheme (name, flavour and mode) in ~/.config/caelestia/colour-overrides.json:

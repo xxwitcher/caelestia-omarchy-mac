@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # DNS for Settings > Network, through NetworkManager (as Omarchy's omarchy-dns does, MIT):
 #   dns.sh                          print the provider (Automatic, Cloudflare, Google or Custom) and servers
 #   dns.sh set <provider> [servers] use it (asks for your password); Custom takes the servers

@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Version
 add_executable(version version.cpp)
 target_compile_definitions(version PRIVATE

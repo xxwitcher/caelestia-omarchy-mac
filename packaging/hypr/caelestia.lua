@@ -1,3 +1,6 @@
+-- Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+-- SPDX-License-Identifier: GPL-3.0-only
+
 -- Caelestia-Silicon: shell integration for Hyprland.
 -- Loaded from the end of hyprland.lua by install-hypr.sh. Settings made in Caelestia's
 -- Displays and Keyboard pages live in ~/.config/caelestia/hypr-settings.lua; the Window style

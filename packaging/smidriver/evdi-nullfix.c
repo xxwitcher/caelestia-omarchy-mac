@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 /*
  * SiliconMotion's SMIUSBDisplayManager calls evdi_open_attached_to(NULL) to
  * get any free EVDI device. Upstream libevdi runs strlen() on that argument

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Reads and sets the fans of an Apple Silicon Mac through the kernel's
 macsmc_hwmon driver.
 

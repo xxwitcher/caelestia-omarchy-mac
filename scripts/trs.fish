@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
 
 if test (count $argv) -lt 1
     echo "Usage: $(status basename) raw|compile|test|<ll_CC>"

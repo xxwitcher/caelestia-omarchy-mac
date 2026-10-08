@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Load Caelestia's Hyprland integration from the end of hyprland.lua (idempotent).
 # --standalone (no Omarchy): install the fork's full hyprland.lua, backing up the old one.
 set -euo pipefail

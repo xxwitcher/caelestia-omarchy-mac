@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 import QtQuick
 
 // Momentum scrolling, as the Witcher's Tweaks app drawer and settings do it: a touchpad scroll

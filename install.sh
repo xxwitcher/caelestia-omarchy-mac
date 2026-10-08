@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Build and install Caelestia-Silicon (Apple Silicon: Asahi Linux, Arch Linux ARM; Omarchy-Mac too).
 # Any other quickshell (Omarchy's) is left alone; Caelestia runs on quickshell-caelestia (/opt) via `caelestia-qs`.
 set -euo pipefail

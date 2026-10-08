@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Print the Codex usage record as JSON: [--force] [--limits-only]
 # From Omarchy (https://github.com/basecamp/omarchy), MIT License, Copyright (c) David
 # Heinemeier Hansson; see LICENSE.omarchy. Adapted for Caelestia (its own cache folder).

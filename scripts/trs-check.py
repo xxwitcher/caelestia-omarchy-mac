@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Checks the source for translation bugs xgettext cannot catch.
 
 Errors, which break the string for translators:

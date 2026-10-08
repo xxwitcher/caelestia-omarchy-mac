@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 import QtQuick
 
 // A number picked with a slider over a range, the way the Witcher's Tweaks settings change it:

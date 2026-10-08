@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Quickshell (git) installed side by side with the system quickshell, for Caelestia-Silicon.
 # Based on the AUR quickshell-git PKGBUILD. Installs to /opt so Omarchy's own quickshell stays untouched.
 

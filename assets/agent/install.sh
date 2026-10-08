@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Coding agent installs for Settings > Apps > Agent:
 #   install.sh <agent> [name]   install it (run in a terminal Settings opens)
 #   install.sh --check <agent>  exit 0 when it's installed

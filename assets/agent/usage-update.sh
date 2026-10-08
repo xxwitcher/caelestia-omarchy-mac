@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Regenerate the agent usage records the Agent tab shows: [--force] [--limits-only] [--no-stats] [agent...]
 # Each usage-<agent>.py collector next to this prints one display-ready JSON record; this writes
 # them to ~/.local/state/caelestia/agents/usage/<agent>.json, which the tab watches.

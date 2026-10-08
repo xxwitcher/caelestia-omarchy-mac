@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Maintainer: Joerg Weislogel <mutoroglin at posteo dot de>
 
 pkgname=libcava

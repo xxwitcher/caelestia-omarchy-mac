@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 import "scripts/fzf.js" as Fzf
 import "scripts/fuzzysort.js" as Fuzzy
 import QtQuick

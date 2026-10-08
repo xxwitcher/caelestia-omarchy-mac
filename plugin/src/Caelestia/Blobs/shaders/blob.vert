@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 #version 440
 
 layout(location = 0) in vec4 qt_VertexPosition;

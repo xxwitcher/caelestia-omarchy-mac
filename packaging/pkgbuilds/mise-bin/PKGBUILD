@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # mise from its official release build, for installing the coding agent picked in Caelestia's
 # Settings > Apps > Agent. Omarchy ships it (as mise-bin, from its own repo); plain Asahi Linux's
 # repos don't have it, so install.sh builds this there.

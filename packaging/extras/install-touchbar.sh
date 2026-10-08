@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Touch Bar layout for MacBooks running tiny-dfr (media/brightness keys and a screenshot key).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"

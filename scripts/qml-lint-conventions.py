@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """Checks QML files for Qt coding convention violations.
 
 https://doc.qt.io/qt-6/qml-codingconventions.html

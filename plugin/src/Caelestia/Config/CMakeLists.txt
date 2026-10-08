@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 qml_module(caelestia-config
     URI Caelestia.Config
     INCLUDE_PREFIX config

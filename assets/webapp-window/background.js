@@ -1,3 +1,6 @@
+// Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+// SPDX-License-Identifier: GPL-3.0-only
+
 // Web app windows (chromium --app=…, assets/launch-webapp.sh) have no scrollbars; their pages
 // still scroll. Normal windows and popups (sign-in windows) keep theirs.
 // Loaded with --load-extension (install.sh adds it to ~/.config/chromium-flags.conf).

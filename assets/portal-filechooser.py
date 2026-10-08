@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 """File pickers for every app that asks the desktop for one, shown with Caelestia's own.
 
 An xdg-desktop-portal FileChooser backend (org.freedesktop.impl.portal.desktop.caelestia, started

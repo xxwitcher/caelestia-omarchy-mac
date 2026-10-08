@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Add a web app to the apps (the launcher's >install): install-webapp.sh <name> <url>
 # Writes a launcher of yours (~/.local/share/applications) that opens the site in its own browser
 # window (assets/launch-webapp.sh), with the site's own icon. assets/remove-app.sh removes both.

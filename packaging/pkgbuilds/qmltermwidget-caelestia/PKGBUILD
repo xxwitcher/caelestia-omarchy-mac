@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # QMLTermWidget (the terminal in the dashboard's Agent tab) with Caelestia-Silicon's patches
 # (caelestia.patch): at most ~30 screen updates a second, since every update redraws the shell's
 # full-screen surface, and a full repaint when it's put in a window or shown again (a partial one

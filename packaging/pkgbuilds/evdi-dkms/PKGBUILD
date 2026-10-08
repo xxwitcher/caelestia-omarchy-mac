@@ -1,3 +1,6 @@
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # evdi (DisplayLink's kernel module and library), from the AUR's evdi-dkms (maintainer: aur.chaotic.cx),
 # for the SiliconMotion USB display driver install.sh sets up; the AUR isn't there on plain Asahi Linux.
 

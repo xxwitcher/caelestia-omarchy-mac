@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 George Dobreff ("Witcher") and contributors
+# SPDX-License-Identifier: GPL-3.0-only
+
 # Run a coding agent in the Agent tab's terminal: launch.sh <agent>
 # The agents and their "don't stop to ask" flags are Omarchy's (omarchy-agent, MIT, see
 # LICENSE.omarchy), so the tab behaves the same with or without Omarchy installed.
