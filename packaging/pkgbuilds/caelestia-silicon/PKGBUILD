@@ -6,7 +6,7 @@
 
 _pkgname='caelestia-shell'
 pkgname=caelestia-silicon
-pkgver=2.5.0.r24.g0906345
+pkgver=2.5.0.r26.gc76e0b7
 pkgrel=1
 pkgdesc='The Caelestia desktop shell for Apple Silicon (Asahi Linux)'
 arch=('x86_64' 'aarch64')

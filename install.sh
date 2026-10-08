@@ -34,8 +34,9 @@ build_install() {
     return 1
   fi
 
-  # The shell's package under its old name owns the same files (--noconfirm won't swap it out)
-  if [[ $pkg == caelestia-silicon ]] && pacman -Q caelestia-omarchy-mac &>/dev/null; then
+  # The shell's package under its old name owns the same files (--noconfirm won't swap it out).
+  # -Qq names the package installed: caelestia-silicon answers to the old name too (provides)
+  if [[ $pkg == caelestia-silicon && $(pacman -Qq caelestia-omarchy-mac 2>/dev/null) == caelestia-omarchy-mac ]]; then
     sudo pacman -Rdd --noconfirm caelestia-omarchy-mac
   fi
 

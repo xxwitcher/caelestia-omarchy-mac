@@ -9,6 +9,7 @@ import qs.utils
 // Window style (Settings > Window style): window-style.conf, key=value lines read by
 // hypr-caelestia.lua; saving reloads Hyprland. With bordertheme on, the border takes its colours
 // from the colour scheme (theme-border.conf, which Colours writes) instead of colors/inactive.
+// With gradient off the border is one colour: solid (empty: the first of colors).
 Singleton {
     id: root
 
@@ -16,6 +17,7 @@ Singleton {
             gradient: "1",
             bordertheme: "1",
             colors: "c4b5fd a855f7 da70d6",
+            solid: "",
             inactive: "5b3a7a",
             fade: "1",
             swipe: "1",

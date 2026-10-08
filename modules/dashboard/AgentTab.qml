@@ -89,6 +89,18 @@ Item {
         terminal.parent = terminalFrame;
         terminal.anchors.fill = terminalFrame;
         terminal.forceActiveFocus();
+        Qt.callLater(root.repaint);
+    }
+
+    // Moved or resized, the terminal's picture starts out empty (magenta, or blank) and only fills
+    // in when the agent prints or it's clicked: copy the session's screen into it, once the move
+    // or resize has settled
+    function repaint(): void {
+        if (!terminal || terminal.parent !== terminalFrame)
+            return;
+        if (typeof terminal.updateImage === "function")
+            terminal.updateImage();
+        terminal.update();
     }
 
     // Hand it back before this tab goes, at the size it had, so the agent's screen doesn't reflow
@@ -126,12 +138,12 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: Tokens.spacing.normal
+        spacing: Tokens.spacing.medium
 
         // ---------- Header: mark · agent · plan ············ restart ----------
         RowLayout {
             Layout.fillWidth: true
-            spacing: Tokens.spacing.normal
+            spacing: Tokens.spacing.medium
 
             Image {
                 id: mark
@@ -249,6 +261,9 @@ Item {
 
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.medium
+
+                onWidthChanged: Qt.callLater(root.repaint)
+                onHeightChanged: Qt.callLater(root.repaint)
             }
 
             StyledText {

@@ -239,7 +239,7 @@ Singleton {
         if (themeBorderFile.text() === conf)
             return;
         themeBorderFile.setText(conf);
-        if (WindowStyle.style.gradient !== "0" && WindowStyle.style.bordertheme !== "0")
+        if (WindowStyle.style.bordertheme !== "0")
             Quickshell.execDetached(["hyprctl", "eval", `if _G.caelestia_set_border then _G.caelestia_set_border("${colors}", "${c.outlineVariant}") end`]);
     }
 

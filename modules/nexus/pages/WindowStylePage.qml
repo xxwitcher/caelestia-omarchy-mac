@@ -19,15 +19,18 @@ PageBase {
     // The border's colours as they are: the scheme's while it follows the scheme
     readonly property list<string> gradientColours: themeBorder ? [Colours.palette.m3primary, Colours.palette.m3secondary, Colours.palette.m3tertiary].map(c => String(c)) : style.colors.split(/\s+/).filter(c => /^[0-9a-fA-F]{6}$/.test(c)).map(c => `#${c}`)
     readonly property string inactiveColour: themeBorder ? String(Colours.palette.m3outlineVariant) : `#${style.inactive}`
+    // The border's one colour while the gradient is off
+    readonly property string solidColour: !themeBorder && /^[0-9a-fA-F]{6}$/.test(style.solid) ? `#${style.solid}` : gradientColours[0] ?? ""
 
     function save(changes: var): void {
         WindowStyle.save(changes);
     }
 
     // A colour picked by hand: the border keeps the colours shown and stops following the scheme
-    function setBorder(colours: list<string>, inactive: string): void {
+    function setBorder(colours: list<string>, inactive: string, solid: string): void {
         save({
             colors: colours.map(c => c.slice(1, 7)).join(" "),
+            solid: solid.slice(1, 7),
             inactive: inactive.slice(1, 7),
             bordertheme: "0"
         });
@@ -36,7 +39,7 @@ PageBase {
     function setGradient(i: int, c: color): void {
         const cols = [...gradientColours];
         cols[i] = String(c);
-        setBorder(cols, inactiveColour);
+        setBorder(cols, inactiveColour, solidColour);
     }
 
     title: Tr.tr("Window style")
@@ -178,7 +181,6 @@ PageBase {
         }
 
         ToggleRow {
-            visible: root.style.gradient === "1"
             text: Tr.tr("Match the theme colours")
             checked: root.themeBorder
             onToggled: root.save({
@@ -204,22 +206,31 @@ PageBase {
         }
 
         ColourRow {
-            visible: root.style.gradient === "1"
+            visible: root.style.gradient !== "1"
+            label: Tr.tr("Border colour")
+
+            ColorWell {
+                color: root.solidColour
+                onPicked: c => root.setBorder(root.gradientColours, root.inactiveColour, String(c))
+            }
+        }
+
+        ColourRow {
             label: Tr.tr("Inactive windows")
 
             ColorWell {
                 color: root.inactiveColour
-                onPicked: c => root.setBorder(root.gradientColours, String(c))
+                onPicked: c => root.setBorder(root.gradientColours, String(c), root.solidColour)
             }
         }
 
         RowButton {
-            visible: root.style.gradient === "1"
             last: true
             icon: "restart_alt"
             text: Tr.tr("Default colors")
             onClicked: root.save({
                     colors: WindowStyle.defaults.colors,
+                    solid: WindowStyle.defaults.solid,
                     inactive: WindowStyle.defaults.inactive,
                     bordertheme: "0"
                 })

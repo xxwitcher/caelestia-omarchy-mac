@@ -145,23 +145,38 @@ Item {
                         values: root.dashboardTabs
                     }
 
+                    // A pane is built the first time it comes into view and kept until the
+                    // dashboard closes: building one again on every tab switch stalled the slide
+                    // for a few hundred ms, and took the Agent tab's terminal out and back in.
+                    // Out of view its pane is hidden (so its animations pause and it isn't drawn);
+                    // the loader stays visible, keeping the pane's place in the row.
                     delegate: Loader {
                         id: paneLoader
 
                         required property int index
                         required property var modelData
 
-                        Layout.alignment: Qt.AlignTop
-
-                        sourceComponent: modelData.component
-
-                        Component.onCompleted: active = Qt.binding(() => {
+                        readonly property bool inView: {
                             if (index === view.currentIndex)
                                 return true;
                             const vx = Math.floor(view.visibleArea.xPosition * view.contentWidth);
                             const vex = Math.floor(vx + view.visibleArea.widthRatio * view.contentWidth);
                             return (vx >= x && vx <= x + implicitWidth) || (vex >= x && vex <= x + implicitWidth);
-                        })
+                        }
+
+                        Layout.alignment: Qt.AlignTop
+
+                        sourceComponent: modelData.component
+                        active: false
+
+                        onInViewChanged: {
+                            if (inView)
+                                active = true;
+                            if (item)
+                                item.visible = inView;
+                        }
+                        onLoaded: item.visible = inView
+                        Component.onCompleted: active = inView
                     }
                 }
             }

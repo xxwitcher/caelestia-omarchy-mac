@@ -188,8 +188,12 @@ void main() {
         float outerLeft = invertedOuter.x - invertedOuter.z;
         float outerRight = invertedOuter.x + invertedOuter.z;
 
+        // The sinks only reach pixels within smoothFactor of an inner edge (the zones below are
+        // all 0 further in), which is most of the screen: skipping them there changes nothing
         float sinkValue = 0.0;
-        for (int i = 0; i < rectCount; i++) {
+        bool nearInnerEdge = pixel.y < innerTop + smoothFactor || pixel.y > innerBot - smoothFactor
+            || pixel.x < innerLeft + smoothFactor || pixel.x > innerRight - smoothFactor;
+        for (int i = 0; nearInnerEdge && i < rectCount; i++) {
             vec4 rect = rectData[i * 5];
             vec4 sinkProps = rectData[i * 5 + 1];
             vec2 sinkSh = rectData[i * 5 + 3].xy;

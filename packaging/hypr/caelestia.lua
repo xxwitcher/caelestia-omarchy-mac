@@ -28,7 +28,7 @@ hl.gesture({ fingers = 3, direction = "down", action = function()
 end })
 
 -- Window style (Settings > Window style writes window-style.conf: key=value lines)
-local style = { gradient = "1", bordertheme = "1", colors = "c4b5fd a855f7 da70d6", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
+local style = { gradient = "1", bordertheme = "1", colors = "c4b5fd a855f7 da70d6", solid = "", inactive = "5b3a7a", fade = "1", swipe = "1", roundingon = "1", rounding = "60", bordersize = "1", gapsin = "1", gapsout = "3", columns = "0", floatnew = "0" }
 local function read_conf(path, into)
   local f = io.open(path)
   if not f then return end
@@ -45,7 +45,7 @@ if style.bordertheme ~= "0" then
   local theme = {}
   read_conf(home .. "/.config/caelestia/theme-border.conf", theme)
   if theme.colors and theme.inactive then
-    style.colors, style.inactive = theme.colors, theme.inactive
+    style.colors, style.inactive, style.solid = theme.colors, theme.inactive, ""
   end
 end
 
@@ -205,15 +205,25 @@ pcall(function()
   end
 end)
 
--- Three-colour gradient border turning around the active window. Hyprland's borderangle loop
--- stops after one turn on 0.56, so a timer turns it (~13 s per turn at ~30 fps); one timer per
--- session calls a tick each reload redefines. The shell changes the colours live (on a scheme
--- change) through caelestia_set_border, so it needn't reload Hyprland, which would close its
--- settings.
+-- The border: a three-colour gradient turning around the active window (gradient=1), or one
+-- colour (solid, else the first of colors). Hyprland's borderangle loop stops after one turn on
+-- 0.56, so a timer turns the gradient (~13 s per turn at ~30 fps); one timer per session, which
+-- a reload with the gradient off switches off (it redraws the screen on every turn). The shell
+-- changes the colours live (on a scheme change) through caelestia_set_border, so it needn't
+-- reload Hyprland, which would close its settings.
+local function hex_list(spec)
+  local colors = {}
+  for hex in (spec or ""):gmatch("%x%x%x%x%x%x") do colors[#colors + 1] = hex:lower() end
+  return colors
+end
+
+local function inactive_of(inactive)
+  if inactive and inactive:match("^%x%x%x%x%x%x$") then return "rgba(" .. inactive .. "aa)" end
+end
+
 if style.gradient == "1" then
   local function gradient_of(spec)
-    local colors = {}
-    for hex in (spec or ""):gmatch("%x%x%x%x%x%x") do colors[#colors + 1] = hex:lower() end
+    local colors = hex_list(spec)
     if #colors ~= 3 then return nil end
     local gradient, weights = {}, { 3, 3, 2 }
     for i, hex in ipairs(colors) do
@@ -226,7 +236,7 @@ if style.gradient == "1" then
   function _G.caelestia_set_border(colors, inactive)
     _G.caelestia_border_gradient = gradient_of(colors) or _G.caelestia_border_gradient or gradient_of("c4b5fd a855f7 da70d6")
     local col = { active_border = { colors = _G.caelestia_border_gradient, angle = _G.caelestia_border_angle } }
-    if inactive and inactive:match("^%x%x%x%x%x%x$") then col.inactive_border = "rgba(" .. inactive .. "aa)" end
+    col.inactive_border = inactive_of(inactive)
     hl.config({ general = { col = col } })
   end
   _G.caelestia_border_gradient = nil
@@ -236,14 +246,25 @@ if style.gradient == "1" then
     _G.caelestia_border_angle = (_G.caelestia_border_angle + 360 * 33 / 13330) % 360
     hl.config({ general = { col = { active_border = { colors = _G.caelestia_border_gradient, angle = _G.caelestia_border_angle } } } })
   end
-  if not _G.caelestia_border_timer then
+  -- (A timer Hyprland has let go of errors: a new one then)
+  if not (_G.caelestia_border_timer and pcall(_G.caelestia_border_timer.set_enabled, _G.caelestia_border_timer, true)) then
     _G.caelestia_border_timer = hl.timer(function()
       if _G.caelestia_border_tick then _G.caelestia_border_tick() end
     end, { timeout = 33, type = "repeat" })
   end
 else
   _G.caelestia_border_tick = nil
-  _G.caelestia_set_border = nil
+  if _G.caelestia_border_timer then pcall(_G.caelestia_border_timer.set_enabled, _G.caelestia_border_timer, false) end
+
+  -- colors: the scheme's on a scheme change (its first is the border colour)
+  function _G.caelestia_set_border(colors, inactive)
+    local active = hex_list(colors)[1]
+    local col = { inactive_border = inactive_of(inactive) }
+    if active then col.active_border = "rgba(" .. active .. "ee)" end
+    hl.config({ general = { col = col } })
+  end
+  local solid = style.solid ~= "" and style.solid or style.colors
+  _G.caelestia_set_border(solid, style.inactive)
 end
 
 -- Title bars on floating windows (ported from the witchers-tweaks titlebars tweak): the
