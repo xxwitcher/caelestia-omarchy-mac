@@ -94,11 +94,7 @@ PageBase {
             options: root.appsIn("TextEditor")
             current: root.editor
             onChosen: v => {
-                const entry = [...DesktopEntries.applications.values].find(a => root.desktopFile(a) === v);
-                const command = (entry?.command?.[0] ?? "").split("/").pop();
-                // Omarchy's editor launcher reads its own file, by command
-                const omarchy = Agents.omarchy && command ? `; mkdir -p ~/.local/state/omarchy/defaults && printf '%s\\n' '${command}' > ~/.local/state/omarchy/defaults/editor` : "";
-                defaultsSet.command = ["sh", "-c", `xdg-mime default '${v}' text/plain${omarchy}`];
+                defaultsSet.command = ["sh", "-c", `xdg-mime default '${v}' text/plain`];
                 defaultsSet.running = true;
             }
         }

@@ -7,7 +7,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Night light through hyprsunset (as Omarchy does, so the two agree): on is a warm temperature,
+// Night light through hyprsunset: on is a warm temperature,
 // off is hyprsunset's identity. hyprsunset is started when it isn't running.
 Singleton {
     id: root

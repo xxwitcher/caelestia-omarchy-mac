@@ -14,9 +14,7 @@ hl.layer_rule({ match = { namespace = "caelestia-(border-exclusion|area-picker|o
 hl.layer_rule({ match = { namespace = "caelestia-(drawers|background)" }, animation = "fade" })
 
 -- Shell shortcuts
--- (chosen to avoid Omarchy's own bindings, e.g. the SUPER + TAB family)
 hl.bind("SUPER + GRAVE", hl.dsp.global("caelestia:overview"))
--- SUPER + SPACE opens the app launcher (instead of the Omarchy menu, on Omarchy)
 pcall(hl.unbind, "SUPER + SPACE")
 hl.bind("SUPER + SPACE", hl.dsp.global("caelestia:launcher"))
 hl.bind("SUPER + N", hl.dsp.global("caelestia:sidebar"))
@@ -52,85 +50,6 @@ if style.bordertheme ~= "0" then
   end
 end
 
--- On Omarchy (its config defines the global `o`), Caelestia replaces the Omarchy shell;
--- shell=omarchy in window-style.conf keeps Omarchy's. Other distros start Caelestia themselves
--- (the standalone config does) and skip all of this.
-local omarchy = type(_G.o) == "table" and type(_G.o.launch) == "function"
-_G.caelestia_shell = style.shell or "caelestia"
-
-if omarchy then
-  -- Omarchy has no switch for its shell, so its launcher is swapped for Caelestia's wherever
-  -- Hyprland runs it: the autostart (hl.exec_cmd) and omarchy-restart-shell (hl.dsp.exec_cmd).
-  -- The functions are looked up when called, so wrapping them here, after Omarchy's config, is enough.
-  local function swap_shell(fn)
-    return function(cmd, ...)
-      if cmd == "omarchy-launch-shell" and _G.caelestia_shell ~= "omarchy" then
-        cmd = "caelestia shell -d"
-      end
-      return fn(cmd, ...)
-    end
-  end
-  -- Wrap once per Lua state: a reload re-runs this file against the already wrapped functions
-  if hl.exec_cmd ~= _G.caelestia_exec_cmd then
-    _G.caelestia_exec_cmd = swap_shell(hl.exec_cmd)
-    hl.exec_cmd = _G.caelestia_exec_cmd
-  end
-  if hl.dsp.exec_cmd ~= _G.caelestia_dsp_exec_cmd then
-    _G.caelestia_dsp_exec_cmd = swap_shell(hl.dsp.exec_cmd)
-    hl.dsp.exec_cmd = _G.caelestia_dsp_exec_cmd
-  end
-
-  -- Without Omarchy's shell, its polkit agent and lock are gone: run polkit-gnome, and point
-  -- Omarchy's lock bindings (which go through omarchy-shell) at Caelestia's lock
-  if _G.caelestia_shell ~= "omarchy" then
-    hl.on("hyprland.start", function()
-      hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
-    end)
-
-    local lock = qs .. " ipc call lock lock"
-    hl.unbind("SUPER + CTRL + L")
-    hl.bind("SUPER + CTRL + L", hl.dsp.exec_cmd(lock))
-
-    -- Same as omarchy-system-lid-close: lock when the lid closes with no external monitor
-    local lid = "sh -c 'if omarchy-hw-laptop-closed && ! omarchy-hw-external-monitors; then " .. lock .. "; fi; omarchy-hyprland-monitor-clamshell'"
-    for _, switch in ipairs({ "Lid Switch", "Apple SMC power/lid events" }) do
-      hl.unbind("switch:on:" .. switch)
-      hl.bind("switch:on:" .. switch, hl.dsp.exec_cmd(lid), { locked = true })
-    end
-
-    -- Display brightness keys (the Touch Bar's too) through Caelestia, as the standalone config
-    -- does, so its brightness slider shows and follows them: Omarchy's script changes the
-    -- backlight behind the shell's back and shows its own OSD, which went with its shell. Steps
-    -- are Settings > Services' brightness step; ALT keeps Omarchy's 1% steps.
-    for key, global in pairs({ XF86MonBrightnessUp = "caelestia:brightnessUp", XF86MonBrightnessDown = "caelestia:brightnessDown" }) do
-      hl.unbind(key)
-      hl.bind(key, hl.dsp.global(global), { locked = true, repeating = true })
-    end
-    for key, step in pairs({ XF86MonBrightnessUp = "+1%", XF86MonBrightnessDown = "1%-" }) do
-      hl.unbind("ALT + " .. key)
-      hl.bind("ALT + " .. key, hl.dsp.exec_cmd(qs .. " ipc call brightness set " .. step), { locked = true, repeating = true })
-    end
-
-    -- Media keys (the Touch Bar's too) went to omarchy-shell, which isn't running: play/pause,
-    -- previous and next act on the player Caelestia's media panel shows, and SHIFT + play/pause
-    -- switches to the next player
-    local media = {
-      ["XF86AudioPlay"] = "caelestia:mediaToggle",
-      ["XF86AudioPause"] = "caelestia:mediaToggle",
-      ["XF86AudioNext"] = "caelestia:mediaNext",
-      ["ALT + XF86AudioPlay"] = "caelestia:mediaNext",
-      ["XF86AudioPrev"] = "caelestia:mediaPrev",
-      ["ALT + SHIFT + XF86AudioPlay"] = "caelestia:mediaPrev",
-      ["SHIFT + XF86AudioPlay"] = "caelestia:mediaSwitch",
-      ["SHIFT + XF86AudioPause"] = "caelestia:mediaSwitch",
-    }
-    for key, global in pairs(media) do
-      pcall(hl.unbind, key)
-      hl.bind(key, hl.dsp.global(global), { locked = true })
-    end
-  end
-end
-
 -- Windows (same as the witchers-tweaks rounding, wide-columns and window-mode; border size and
 -- gaps are set at the end of this file). New windows tile unless floatnew is on.
 if style.roundingon == "1" then
@@ -159,8 +78,8 @@ if style.fade == "1" then
 end
 
 -- 3-finger horizontal swipe between workspaces, tuned like the witchers-tweaks swipe: a short
--- swipe is enough and a quick flick commits. Omarchy doesn't define the gesture, and neither does
--- the standalone config, so it's only here (defining it twice in your own config is an error).
+-- swipe is enough and a quick flick commits. The standalone config doesn't define the gesture, so
+-- it's only here (defining it twice in your own config is an error).
 if style.swipe == "1" then
   pcall(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
   hl.config({ gestures = {
@@ -173,24 +92,16 @@ if style.swipe == "1" then
 end
 
 -- Keybindings from the witchers-tweaks: CTRL+Q closes the window, SUPER+M minimizes it (into
--- special:minimized, where the dock brings it back), SUPER+B opens the browser and SUPER+A the
--- default agent in a terminal (on Omarchy instead of SUPER+SHIFT+B and SUPER+SHIFT+A)
+-- special:minimized, where the dock brings it back) and SUPER+A opens the default agent in a
+-- terminal (SUPER+B, the browser, is in the standalone config)
 hl.bind("CTRL + Q", hl.dsp.window.close(), { description = "Close window" })
 hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimize window" })
-if omarchy then
-  pcall(hl.unbind, "SUPER + SHIFT + B")
-  o.bind("SUPER + B", "Browser", { omarchy = "browser" })
-  pcall(hl.unbind, "SUPER + SHIFT + A")
-  o.bind("SUPER + A", "Agent", "omarchy-agent")
-else
-  -- The standalone config binds SUPER + B to the browser itself
-  hl.bind("SUPER + A", hl.dsp.global("caelestia:agent"), { description = "Agent" })
-end
+hl.bind("SUPER + A", hl.dsp.global("caelestia:agent"), { description = "Agent" })
 
 -- Keyboard options from the witchers-tweaks, added to the ones already set: left Ctrl and left
--- Super trade places (the right-hand keys stay), and Caps Lock is a plain Caps Lock: not Omarchy's
--- compose key, and not cancelled by Shift (Omarchy's shift:both_capslock_cancel, which made
--- Shift + 1 turn Caps Lock off and type 1 instead of !). Settings > Keyboard & trackpad changes either; what it saves there is
+-- Super trade places (the right-hand keys stay), and Caps Lock is a plain Caps Lock: not a compose
+-- key, and not cancelled by Shift (shift:both_capslock_cancel made Shift + 1 turn Caps Lock off
+-- and type 1 instead of !). Settings > Keyboard & trackpad changes either; what it saves there is
 -- loaded after this (hypr-settings.lua) and wins.
 pcall(function()
   local options = hl.get_config("input.kb_options")

@@ -10,8 +10,6 @@ A desktop shell for Apple Silicon Macs running Asahi Linux, built on
 Caelestia-Silicon is a fork of the Caelestia shell, reworked for MacBooks on
 [Asahi Linux](https://asahilinux.org/) (Arch Linux ARM). It installs everything it needs on a plain
 Asahi system: the shell, its Hyprland config, theming, and Mac-specific extras like the Touch Bar.
-[Omarchy-Mac](https://github.com/omacom/omarchy-mac) is supported too: there it replaces Omarchy's
-shell and leaves the rest of Omarchy alone. It doesn't need Omarchy.
 
 ## Features
 
@@ -32,6 +30,10 @@ On top of Caelestia's bar, launcher, dashboard, sidebar, notifications, lock scr
 -   **Trackpad gestures**: 3-finger swipe between workspaces, and up or down for the overview.
 -   **Coding agents**: an agent terminal in the shell (<kbd>SUPER</kbd> + <kbd>A</kbd>), with skills
     that teach agents about this system.
+-   **Store**: apps from the Arch repos, Flathub (ARM builds) and the AUR in one place: browse,
+    search, install, remove, and update Flatpak and AUR apps.
+-   **Password prompt**: the shell is the session's polkit agent, so requests for administrator
+    rights (pkexec, the Store's installs) appear as a shell dialog above everything.
 -   **Updates and apps**: pending updates in Settings; `>install` in the launcher adds a web app or
     a package, and `>uninstall` (or the app drawer's Remove…) removes an app, packages through an
     in-shell terminal.
@@ -39,7 +41,7 @@ On top of Caelestia's bar, launcher, dashboard, sidebar, notifications, lock scr
 ## Requirements
 
 -   An Apple Silicon Mac running [Asahi Linux](https://asahilinux.org/) on **Arch Linux ARM** (the
-    installer uses `pacman` and `makepkg`), or [Omarchy-Mac](https://github.com/omacom/omarchy-mac).
+    installer uses `pacman` and `makepkg`).
 -   A user with `sudo`.
 
 ## Installation
@@ -55,9 +57,9 @@ The installer:
 -   builds and installs the shell and the packages it needs from `packaging/pkgbuilds/`: the shell
     (`caelestia-silicon`), `quickshell-caelestia` (Quickshell in `/opt`, next to any other
     Quickshell), `caelestia-cli` and a few dependencies;
--   without Omarchy, installs Hyprland, the portals, a polkit agent, a keyring, `foot` and `thunar`,
-    and links a full Hyprland config to `~/.config/hypr/hyprland.lua` (an existing one is backed up);
--   on Omarchy-Mac, adds Caelestia to the end of your existing `hyprland.lua` instead;
+-   installs Hyprland, the portals, a keyring, `foot` and `thunar`, and links a full Hyprland config
+    to `~/.config/hypr/hyprland.lua` (an existing one is backed up);
+-   installs the wallpapers into `~/Pictures/Wallpapers/TarisOS`;
 -   sets up the Touch Bar, the USB display adapter driver, the file picker, title bars on floating
     windows, the Witcher theme and the agent skills;
 -   starts the shell when run inside a Hyprland session.
@@ -101,7 +103,7 @@ The left <kbd>CTRL</kbd> and <kbd>SUPER</kbd> keys are swapped, so <kbd>⌘</kbd
 on macOS (<kbd>⌘</kbd> + <kbd>C</kbd> copies, <kbd>⌘</kbd> + <kbd>Q</kbd> closes) and the
 <kbd>SUPER</kbd> shortcuts above are on the <kbd>control</kbd> key. Settings > Keyboard & trackpad
 changes this.
-Without Omarchy, `packaging/hypr/standalone/hyprland.lua` adds the usual window management
+`packaging/hypr/standalone/hyprland.lua` adds the usual window management
 shortcuts (<kbd>SUPER</kbd> + <kbd>RETURN</kbd> terminal, <kbd>SUPER</kbd> + <kbd>1</kbd>–<kbd>9</kbd>
 workspaces and so on).
 
@@ -115,14 +117,12 @@ caelestia shell -s   # list every IPC command
 ### Wallpapers
 
 Wallpapers are read from `~/Pictures/Wallpapers` (`paths.wallpaperDir` in `shell.json` changes it);
-pick them in Settings > Appearance, or set one with `caelestia wallpaper -f <path>`. On Omarchy-Mac,
-Omarchy's theme backgrounds are linked there too, one folder per theme.
+pick them in Settings > Appearance, or set one with `caelestia wallpaper -f <path>`.
 
 ### Your own Hyprland config
 
-On Asahi, `~/.config/hypr/hyprland.lua` is a link to `packaging/hypr/standalone/hyprland.lua` in
-this checkout: put your changes in `~/.config/hypr/user.lua`, which it loads last. On Omarchy-Mac,
-`hyprland.lua` stays yours, and Caelestia's part is loaded from its end.
+`~/.config/hypr/hyprland.lua` is a link to `packaging/hypr/standalone/hyprland.lua` in this
+checkout: put your changes in `~/.config/hypr/user.lua`, which it loads last.
 `~/.config/caelestia/hypr-caelestia.lua` is a link to `packaging/hypr/caelestia.lua`; don't edit it.
 
 ## Configuring

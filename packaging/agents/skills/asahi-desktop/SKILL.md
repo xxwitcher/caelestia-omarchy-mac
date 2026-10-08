@@ -14,8 +14,7 @@ description: >
 
 Manage this machine: Arch Linux ARM on an Apple Silicon Mac (Asahi Linux), with Hyprland as the
 window manager and Caelestia as the desktop shell (see the caelestia skill). The desktop was set up
-by `{{REPO}}/install.sh`. There is no Omarchy on this system: no `omarchy` commands,
-no `~/.config/omarchy/`, no `/usr/share/omarchy/`.
+by `{{REPO}}/install.sh`.
 
 This skill is for end-user customization. It is not for developing Caelestia or the install
 scripts in `{{REPO}}`.
@@ -132,7 +131,7 @@ caelestia shell -l                    # The shell's log
 3. **Is it another config edit?** Edit in `~/.config/`, never in `/usr/` or the checkout.
 4. **Is it a package install?** `sudo pacman -S --needed <pkgs...>` in a terminal.
 5. **Is it automation on an event?** Use a systemd user unit (`~/.config/systemd/user/`) or a
-   Hyprland event handler (`hl.on(...)`) in `user.lua`. There are no Omarchy hooks here.
+   Hyprland event handler (`hl.on(...)`) in `user.lua`.
 6. **Unsure a command exists?** Check with `command -v <name>` before suggesting it.
 
 ## Reporting Bugs

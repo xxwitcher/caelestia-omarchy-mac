@@ -13,6 +13,7 @@ import qs.components
 import qs.components.filedialog
 import qs.services
 import qs.modules.nexus
+import qs.modules.store
 import qs.modules.windowinfo
 
 Item {
@@ -60,7 +61,7 @@ Item {
 
     function detach(mode: string): void {
         setAnims(true);
-        if (mode === "winfo") {
+        if (mode === "winfo" || mode === "store") {
             detachedMode = mode;
         } else {
             queuedMode = mode;
@@ -153,10 +154,12 @@ Item {
         // overlay itself (clicking its colour picker drops it)
         property bool regrabbing
 
-        active: root.isDetached && !regrabbing
+        // Off while a password prompt is up (ShellState.authenticating): it gets the clicks and the
+        // keyboard, and the overlay stays open under it
+        active: root.isDetached && !regrabbing && !ShellState.authenticating
         windows: [QsWindow.window]
         onCleared: {
-            if (Hypr.reloading() || detachedHover.hovered || fileDialogHover.hovered || terminalHover.hovered) {
+            if (Hypr.reloading() || detachedHover.hovered || fileDialogHover.hovered || terminalHover.hovered || storeHover.hovered) {
                 regrabbing = true;
                 Qt.callLater(() => regrabbing = false);
             } else {
@@ -308,6 +311,33 @@ Item {
 
         HoverHandler {
             id: detachedHover
+        }
+    }
+
+    // The Store (modules/store), the same way: its corner button turns it into a window
+    Comp {
+        id: store
+
+        shouldBeActive: root.detachedMode === "store"
+        anchors.centerIn: parent
+
+        sourceComponent: StyledClippingRect {
+            radius: Tokens.rounding.extraLarge
+            implicitWidth: storeInner.implicitWidth
+            implicitHeight: storeInner.implicitHeight
+
+            Store {
+                id: storeInner
+
+                anchors.fill: parent
+                sState.screen: root.screen
+                sState.animatingContainer: store.opacity < 1
+                onClose: root.close("closed from the Store")
+            }
+        }
+
+        HoverHandler {
+            id: storeHover
         }
     }
 

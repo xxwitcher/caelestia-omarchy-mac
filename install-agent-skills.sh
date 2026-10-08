@@ -2,38 +2,22 @@
 # Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 # SPDX-License-Identifier: GPL-3.0-only
 
-# Instructions and rules for coding agents (skills), linked where the agents look for them, the
-# same places Omarchy links its own: ~/.agents, ~/.claude, ~/.codex, ~/.pi (and ~/.gemini, ~/.hermes
-# when those agents are set up). Each skill is written for this system: the agents/skills sources
-# keep what only holds on Omarchy between <!-- omarchy --> lines and what only holds without it
-# between <!-- asahi --> lines, and {{REPO}} is this checkout.
-# On Omarchy only the caelestia skill is added (Omarchy ships its own omarchy and diagnose-crash);
-# without it, asahi-desktop and diagnose-crash take their place. Safe to re-run.
+# Instructions and rules for coding agents (skills), linked where the agents look for them:
+# ~/.agents, ~/.claude, ~/.codex, ~/.pi (and ~/.gemini, ~/.hermes when those agents are set up).
+# {{REPO}} in them is this checkout. Safe to re-run.
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")" && pwd)"
 here="$repo/packaging"
 data="${XDG_DATA_HOME:-$HOME/.local/share}/caelestia/agent-skills"
-
-if [[ -d /usr/share/omarchy ]]; then
-  system=omarchy other=asahi
-  skills=(caelestia)
-else
-  system=asahi other=omarchy
-  skills=(caelestia asahi-desktop diagnose-crash)
-fi
+skills=(caelestia asahi-desktop diagnose-crash)
 
 rm -rf "$data"
 mkdir -p "$data"
 for skill in "${skills[@]}"; do
   mkdir -p "$data/$skill"
   for file in "$here/agents/skills/$skill"/*; do
-    awk -v keep="$system" -v drop="$other" '
-      $0 == "<!-- " keep " -->" || $0 == "<!-- /" keep " -->" { next }
-      $0 == "<!-- " drop " -->" { skip = 1; next }
-      $0 == "<!-- /" drop " -->" { skip = 0; next }
-      !skip
-    ' "$file" | sed "s|{{REPO}}|$repo|g" >"$data/$skill/${file##*/}"
+    sed "s|{{REPO}}|$repo|g" "$file" >"$data/$skill/${file##*/}"
   done
 done
 

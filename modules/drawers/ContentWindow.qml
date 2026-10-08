@@ -117,6 +117,9 @@ StyledWindow {
         id: focusGrab
 
         active: {
+            // A password prompt is up (modules/polkit): it gets the clicks and the keyboard
+            if (ShellState.authenticating)
+                return false;
             const s = root.screenState;
             const conf = root.contentItem.Config;
             if ((s.launcher && conf.launcher.enabled) || (s.session && conf.session.enabled) || (s.sidebar && conf.sidebar.enabled))

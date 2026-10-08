@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 # Remove an app from the app drawer's menu (Remove…): remove-app.sh <desktop-id> <name>
-# The same on every system (Omarchy's remover isn't used, so plain Asahi works alike):
+# What it removes:
 # - a launcher of your own (~/.local/share/applications: web apps, TUIs, AppImages...) is deleted,
 #   with its icon when that's one of yours, and the AppImage it starts
 # - a package's app is uninstalled in a terminal (sudo pacman -Rns, asking for your password)

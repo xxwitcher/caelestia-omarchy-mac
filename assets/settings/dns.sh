@@ -2,14 +2,12 @@
 # Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 # SPDX-License-Identifier: GPL-3.0-only
 
-# DNS for Settings > Network, through NetworkManager (as Omarchy's omarchy-dns does, MIT):
+# DNS for Settings > Network, through NetworkManager:
 #   dns.sh                          print the provider (Automatic, Cloudflare, Google or Custom) and servers
 #   dns.sh set <provider> [servers] use it (asks for your password); Custom takes the servers
 set -euo pipefail
 
 conf=/etc/NetworkManager/conf.d/20-caelestia-dns.conf
-# Omarchy's own file; replaced by this one so there's only ever one
-omarchy_conf=/etc/NetworkManager/conf.d/20-omarchy-dns.conf
 
 servers_in() {
   [[ -f $1 ]] || return 0
@@ -18,7 +16,6 @@ servers_in() {
 
 if (($# == 0)); then
   servers=$(servers_in "$conf")
-  [[ -z $servers ]] && servers=$(servers_in "$omarchy_conf")
   case "$servers" in
   "") provider=Automatic ;;
   *1.1.1.1* | *cloudflare*) provider=Cloudflare ;;
@@ -48,7 +45,6 @@ if [[ -n $servers ]]; then
 else
   rm -f "$conf"
 fi
-rm -f "$omarchy_conf"
 
 # Per-connection DNS too, so DHCP-provided servers don't win over the chosen ones
 ipv4="" ipv6=""

@@ -13,6 +13,7 @@ import "modules/background"
 import "modules/areapicker"
 import "modules/lock"
 import "modules/overview"
+import "modules/polkit"
 import "modules/windowcontrols"
 import QtQuick
 import Quickshell
@@ -44,6 +45,7 @@ ShellRoot {
     Overview {}
     FloatingControls {}
     BatteryMonitor {}
+    Polkit {}
     IdleMonitors {
         lock: lock
     }

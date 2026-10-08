@@ -75,7 +75,7 @@ if("shell" IN_LIST ENABLE_MODULES)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
 
-    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/install-webapp.sh assets/launch-webapp.sh
+    install(PROGRAMS assets/wrap_term_launch.sh assets/fans.py assets/remove-app.sh assets/install-webapp.sh assets/launch-webapp.sh assets/store.py
         assets/scheme-overrides.py assets/portal-filechooser.py
         DESTINATION "${INSTALL_QSCONFDIR}/assets")
 
@@ -92,6 +92,7 @@ if("shell" IN_LIST ENABLE_MODULES)
 
     # Settings as an app: the dock shows Caelestia's windows as this entry, and launches it to reopen them
     install(FILES assets/caelestia-settings.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+    install(FILES assets/caelestia-store.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
 
     file(READ shell.qml SHELL_QML)
     string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")

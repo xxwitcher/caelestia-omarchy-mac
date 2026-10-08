@@ -5,12 +5,11 @@
 # Regenerate the agent usage records the Agent tab shows: [--force] [--limits-only] [--no-stats] [agent...]
 # Each usage-<agent>.py collector next to this prints one display-ready JSON record; this writes
 # them to ~/.local/state/caelestia/agents/usage/<agent>.json, which the tab watches.
-# Adapted from Omarchy's omarchy-agent-usage-update (MIT, see LICENSE.omarchy).
 
 usage_dir="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia/agents/usage"
 
-# The collectors run the agents (codex), which mise puts on PATH through its shims; Omarchy adds
-# them to the session, a plain install doesn't
+# The collectors run the agents (codex), which mise puts on PATH through its shims; the session
+# doesn't have them on PATH by itself
 mise_shims="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims"
 [[ :$PATH: == *":$mise_shims:"* ]] || export PATH="$mise_shims:$PATH"
 

@@ -9,6 +9,7 @@ import Caelestia.Config
 import qs.components.misc
 import qs.services
 import qs.modules.nexus
+import qs.modules.store
 
 Scope {
     id: root
@@ -153,6 +154,14 @@ Scope {
         }
 
         target: "nexus"
+    }
+
+    IpcHandler {
+        function open(): void {
+            StoreWindow.open();
+        }
+
+        target: "store"
     }
 
     IpcHandler {

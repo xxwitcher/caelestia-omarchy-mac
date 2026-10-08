@@ -20,10 +20,9 @@ Singleton {
         proc.running = true;
     }
 
-    // In a terminal: omarchy-update when Omarchy is installed (Omarchy and the system), otherwise
-    // yay or pacman
+    // In a terminal: yay (the system and AUR packages), else pacman
     function update(): void {
-        Quickshell.execDetached(["sh", "-c", `exec ${GlobalConfig.general.apps.terminal.join(" ")} -e sh -c 'if command -v omarchy-update >/dev/null; then omarchy-update; elif command -v yay >/dev/null; then yay -Syu; else sudo pacman -Syu; fi; echo; read -p "Done. Press Enter to close" _'`]);
+        Quickshell.execDetached(["sh", "-c", `exec ${GlobalConfig.general.apps.terminal.join(" ")} -e sh -c 'if command -v yay >/dev/null; then yay -Syu; else sudo pacman -Syu; fi; echo; read -p "Done. Press Enter to close" _'`]);
     }
 
     Process {

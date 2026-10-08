@@ -12,6 +12,9 @@ import qs.services
 
 Singleton {
     property ShellRoot shellRoot
+    // A password prompt (modules/polkit) is up: the shell's focus grabs let go meanwhile, so the
+    // prompt gets every click and key
+    property bool authenticating
 
     // A disabled sidebar never counts as open (it would silence notification popups for nothing)
     function anySidebarOpen(): bool {

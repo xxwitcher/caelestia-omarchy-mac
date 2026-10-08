@@ -2,8 +2,8 @@
 # Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 # SPDX-License-Identifier: GPL-3.0-only
 
-# Build and install Caelestia-Silicon (Apple Silicon: Asahi Linux, Arch Linux ARM; Omarchy-Mac too).
-# Any other quickshell (Omarchy's) is left alone; Caelestia runs on quickshell-caelestia (/opt) via `caelestia-qs`.
+# Build and install Caelestia-Silicon on Asahi Linux (Arch Linux ARM, Apple Silicon). Caelestia runs
+# on quickshell-caelestia (/opt) via `caelestia-qs`, beside any other quickshell.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -17,8 +17,7 @@ sudo pacman -S --needed vulkan-headers cli11 ninja cmake git aubio libqalculate 
 
 # Packages ours replace: they own the same files, and --noconfirm won't swap them out
 declare -A replaces=(
-  [caelestia-silicon]=caelestia-omarchy-mac # The shell's package under its old name
-  [qmltermwidget-caelestia]=qmltermwidget   # The Agent tab's terminal, patched (see its PKGBUILD)
+  [qmltermwidget-caelestia]=qmltermwidget # The Agent tab's terminal, patched (see its PKGBUILD)
 )
 
 # Installed already, at this PKGBUILD's version where it fixes one (where pkgver() makes it at build
@@ -65,7 +64,7 @@ build_install() {
 }
 
 # Dependencies first: each later package needs the earlier ones installed to build
-# mise-bin installs the coding agent picked in Settings > Apps > Agent (Omarchy already has it)
+# mise-bin installs the coding agent picked in Settings > Apps > Agent
 for pkg in libcava qt6-m3shapes-git ttf-rubik-vf python-materialyoucolor quickshell-caelestia caelestia-cli qmltermwidget-caelestia mise-bin; do
   # Any mise will do (another package, or mise's own installer); a second one would conflict
   [[ $pkg == mise-bin ]] && command -v mise &>/dev/null && { echo "==> mise is already installed, skipping."; continue; }
@@ -75,7 +74,7 @@ done
 # The settings search's index of every option on the settings pages, up to date with them
 python3 -I "$here/scripts/settings-index.py" || echo "warning: the settings search index could not be updated" >&2
 
-# The shell itself, from this checkout (it replaces caelestia-omarchy-mac, its old name)
+# The shell itself, from this checkout
 CAELESTIA_SRC="$here" build_install caelestia-silicon
 
 # The Agent tab's terminal colours: the shell writes them from Caelestia's scheme, but QMLTermWidget
@@ -159,17 +158,19 @@ install_fan_control() {
 }
 install_fan_control || echo "warning: fan control could not be set up (see above)" >&2
 
-"$packaging/link-omarchy-wallpapers.sh"
-# Without Omarchy, also install a full Hyprland config, a polkit agent and GTK/Qt theming
-if [[ -d /usr/share/omarchy ]]; then
-  # Caelestia replaces the Omarchy shell, which was the polkit agent (hypr/caelestia.lua starts this one)
-  sudo pacman -S --needed polkit-gnome
-  "$here/install-hypr.sh"
-else
-  sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk polkit-gnome gnome-keyring \
-    foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
-  "$here/install-hypr.sh" --standalone
-fi
+# The wallpapers (packaging/wallpapers), one category in the shell's wallpaper folder
+install_wallpapers() {
+  local walls="${CAELESTIA_WALLPAPERS_DIR:-$HOME/Pictures/Wallpapers}/TarisOS"
+  mkdir -p "$walls"
+  cp -u "$packaging"/wallpapers/*.webp "$walls"/
+}
+install_wallpapers || echo "warning: the wallpapers could not be installed (see above)" >&2
+
+# Hyprland, its config and GTK/Qt theming (the polkit agent, the password prompt, is Caelestia
+# itself: modules/polkit)
+sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk gnome-keyring \
+  foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
+"$here/install-hypr.sh"
 
 # The Witcher colour theme (packaging/defaults/witcher-theme.json: gruvbox soft dark with its colours
 # changed) among the saved themes on Settings > Colours; a fresh install starts in it
@@ -217,7 +218,7 @@ add_webapp_extension() {
 add_webapp_extension || echo "warning: the web app extension could not be added to Chromium (see above)" >&2
 
 # Google account sign-in (and sync) in Chromium: Google only allows it for Chrome, so Chromium
-# signs in with Chrome's own OAuth client, which every copy of Chrome carries (as Omarchy does)
+# signs in with Chrome's own OAuth client, which every copy of Chrome carries
 add_chromium_google_account() {
   local flags="${XDG_CONFIG_HOME:-$HOME/.config}/chromium-flags.conf" line
   mkdir -p "$(dirname "$flags")"
@@ -250,21 +251,37 @@ done
 # Title bars on floating windows need the hyprbars plugin built for this Hyprland
 "$packaging/titlebars/build-hyprbars" || echo "hyprbars could not be built; floating windows get no drag strip"
 
-# Start the shell just installed. Only inside the Hyprland session it's for (not over SSH or from a
-# TTY), and not when Omarchy's own shell was chosen (shell=omarchy in window-style.conf)
-style="${XDG_CONFIG_HOME:-$HOME/.config}/caelestia/window-style.conf"
+# Start the shell just installed, only inside the Hyprland session it's for (not over SSH or from a
+# TTY)
 if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
   echo "Done. Start Caelestia from your Hyprland session with: caelestia shell -d"
-elif grep -qsx 'shell=omarchy' "$style"; then
-  echo "Done. Omarchy's shell is the one chosen (shell=omarchy in $style), so Caelestia wasn't started."
 else
-  # Omarchy's shell runs until the next login (hypr-caelestia.lua swaps it out then): stop it,
-  # its launcher first so it doesn't start it again
-  if [[ -d /usr/share/omarchy ]]; then
-    pkill -f 'omarchy-launch-shell' 2>/dev/null || true
-    pkill -f "quickshell -n -p ${OMARCHY_PATH:-/usr/share/omarchy}/shell" 2>/dev/null || true
-  fi
+  # Caelestia is the polkit agent now: polkit-gnome (started by older versions of this setup) holds
+  # the agent's place while it runs
+  pkill -f polkit-gnome-authentication-agent-1 2>/dev/null || true
   caelestia shell -k &>/dev/null || true
   caelestia shell -d
-  echo "Done. Caelestia is running."
+  # A config that fails to load leaves the process running with nothing on screen, and says so
+  # only in its log: wait for the log to say which (up to 15 s)
+  status=""
+  for _ in $(seq 30); do
+    log=$(timeout 3 caelestia shell -l 2>/dev/null || true)
+    if grep -q 'Failed to load configuration' <<<"$log"; then
+      status=failed
+      break
+    elif grep -q 'Configuration Loaded' <<<"$log"; then
+      status=loaded
+      break
+    fi
+    sleep 0.5
+  done
+  case $status in
+  loaded) echo "Done. Caelestia is running." ;;
+  failed)
+    echo "error: Caelestia was installed but its config failed to load:" >&2
+    grep -E 'ERROR' <<<"$log" | sed 's/\x1b\[[0-9;]*m//g' >&2
+    exit 1
+    ;;
+  *) echo "warning: Caelestia was started, but its log doesn't say yet whether it loaded (caelestia shell -l)" >&2 ;;
+  esac
 fi

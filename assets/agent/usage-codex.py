@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 # Print the Codex usage record as JSON: [--force] [--limits-only]
-# From Omarchy (https://github.com/basecamp/omarchy), MIT License, Copyright (c) David
-# Heinemeier Hansson; see LICENSE.omarchy. Adapted for Caelestia (its own cache folder).
 """Collect Codex usage into one display-ready JSON record.
 
 Local stats come from native Codex CLI session files, pi/omp sessions that

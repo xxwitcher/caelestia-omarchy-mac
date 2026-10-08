@@ -6,13 +6,12 @@
 #   install.sh <agent> [name]   install it (run in a terminal Settings opens)
 #   install.sh --check <agent>  exit 0 when it's installed
 #   install.sh --installed      print the installed agents, one per line
-# Same packages as Omarchy's omarchy-default-agent and omarchy-install-hermes-cli (MIT, see
-# LICENSE.omarchy), all through mise, so it works with or without Omarchy.
+# All through mise.
 
 agents=(claude codex agy copilot crush grok hermes omp opencode ori pi)
 
-# mise puts what it installs on PATH through its shims; Omarchy adds them to the session, a plain
-# install doesn't
+# mise puts what it installs on PATH through its shims; the session doesn't have them on PATH by
+# itself
 mise_shims="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims"
 [[ :$PATH: == *":$mise_shims:"* ]] || export PATH="$mise_shims:$PATH"
 
@@ -38,20 +37,15 @@ package_of() {
 mise_installed=$(command -v mise >/dev/null && mise ls --installed --json 2>/dev/null |
   python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)))' 2>/dev/null)
 
-# Omarchy puts stubs on PATH that install an agent on first run, so a command on PATH doesn't mean
-# it's installed: ask mise (or Omarchy's Hermes installer), and only count a command that isn't
-# such a stub
+# A command on PATH can be a stub that installs the agent on first run (it runs `mise use -g`), so it
+# doesn't mean the agent is installed: ask mise, and only count a command that isn't such a stub
 installed() {
   local agent="$1" package path
-  if [[ $agent == hermes ]] && command -v omarchy-install-hermes-cli >/dev/null; then
-    omarchy-install-hermes-cli --check &>/dev/null
-    return
-  fi
   package=$(package_of "$agent") || return 1
   # mise lists the Hermes tool without its extras
   grep -qxF "${package%%\[*}" <<<"$mise_installed" && return 0
   path=$(command -v "$agent") || return 1
-  ! grep -q "mise use -g\|omarchy-install-hermes-cli" "$path" 2>/dev/null
+  ! grep -q "mise use -g" "$path" 2>/dev/null
 }
 
 case "${1:-}" in
@@ -78,12 +72,6 @@ finish() {
 }
 
 package=$(package_of "$agent") || finish "Unsupported agent: $agent" 1
-
-# On Omarchy, its own installer keeps Hermes in step with Hermes Desktop
-if [[ $agent == hermes ]] && command -v omarchy-install-hermes-cli >/dev/null; then
-  printf 'Installing %s…\n\n' "$name"
-  omarchy-install-hermes-cli --now && finish "$name is installed. $after" || finish "Could not install $name." 1
-fi
 
 command -v mise >/dev/null || finish "Installing $name needs mise (https://mise.jdx.dev). Install mise, or install $name yourself, then: $after" 1
 

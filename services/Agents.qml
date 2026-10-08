@@ -10,13 +10,12 @@ import Caelestia.Config
 import qs.utils
 
 // Coding agents for the dashboard's Agent tab: which one is the default, and its usage (plan and
-// rate limits). Ported from the Witcher's Tweaks agent panel, which used Omarchy's agents. The
-// usage collectors are bundled (assets/agent, from Omarchy), so this works without Omarchy; on
-// Omarchy the default agent is shared with Omarchy's own (~/.config/omarchy/defaults/agent).
+// rate limits). Ported from the Witcher's Tweaks agent panel; the usage collectors are bundled
+// (assets/agent).
 Singleton {
     id: root
 
-    // Omarchy's agent list (omarchy-default-agent), in its settings order
+    // The agents Settings > Apps > Agent offers, in its order
     readonly property var list: [
         { id: "claude", name: "Claude Code" },
         { id: "codex", name: "Codex" },
@@ -35,11 +34,7 @@ Singleton {
 
     readonly property string scriptDir: `${Quickshell.shellDir}/assets/agent`
     readonly property string usageDir: `${Paths.state}/agents/usage`
-    readonly property string omarchyDefaultFile: `${Paths.home}/.config/omarchy/defaults/agent`
-    readonly property bool omarchy: !!Quickshell.env("OMARCHY_PATH")
-
-    property string omarchyDefault
-    readonly property string defaultAgent: GlobalConfig.general.apps.agent || omarchyDefault
+    readonly property string defaultAgent: GlobalConfig.general.apps.agent
 
     // Usage records by agent id (what the collectors write)
     property var records: ({})
@@ -66,14 +61,14 @@ Singleton {
             installedCheck.running = true;
     }
 
-    // Make it the default, and install it first when it isn't (in a terminal, like Omarchy)
+    // Make it the default, and install it first when it isn't (in a terminal)
     function pick(id: string): void {
         setDefault(id);
         pickCheck.agent = id;
         pickCheck.running = true;
     }
 
-    // The default agent in a terminal window of its own (SUPER + A without Omarchy), the way the
+    // The default agent in a terminal window of its own (SUPER + A), the way the
     // Agent tab runs it
     function openInTerminal(): void {
         Quickshell.execDetached({
@@ -84,9 +79,6 @@ Singleton {
 
     function setDefault(id: string): void {
         GlobalConfig.general.apps.agent = id;
-        // Keep Omarchy's own launcher (its keybinding and menu) on the same agent
-        if (omarchy)
-            omarchyDefaultView.setText(`${id}\n`);
     }
 
     // Opening the tab wants the numbers that go stale on the wire, not another scan of every
@@ -214,16 +206,5 @@ Singleton {
                 }
             }
         }
-    }
-
-    FileView {
-        id: omarchyDefaultView
-
-        path: root.omarchyDefaultFile
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: root.omarchyDefault = text().trim()
-        onLoadFailed: root.omarchyDefault = ""
     }
 }

@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 # mise from its official release build, for installing the coding agent picked in Caelestia's
-# Settings > Apps > Agent. Omarchy ships it (as mise-bin, from its own repo); plain Asahi Linux's
-# repos don't have it, so install.sh builds this there.
+# Settings > Apps > Agent. Asahi Linux's repos don't have it, so install.sh builds this.
 
 pkgname=mise-bin
 pkgver=2026.10.3

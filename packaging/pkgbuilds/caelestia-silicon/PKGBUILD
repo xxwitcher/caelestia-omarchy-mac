@@ -3,13 +3,13 @@
 
 # Caelestia-Silicon: the Caelestia shell for Apple Silicon (Asahi Linux), built from xxwitcher/caelestia-silicon.
 # Based on the AUR caelestia-shell-git PKGBUILD. Runs on quickshell-caelestia instead of quickshell-git,
-# so any other quickshell (Omarchy's) stays installed.
+# so any other quickshell stays installed.
 #
 # Set CAELESTIA_SRC=/path/to/checkout to build from a local working tree instead of the git remote.
 
 _pkgname='caelestia-shell'
 pkgname=caelestia-silicon
-pkgver=2.5.0.r29.gc7fa315
+pkgver=2.5.0.r32.g8897229
 pkgrel=1
 pkgdesc='The Caelestia desktop shell for Apple Silicon (Asahi Linux)'
 arch=('x86_64' 'aarch64')
@@ -62,10 +62,8 @@ optdepends=(
     'mise: install the coding agent picked in Settings > Apps > Agent (install.sh installs it)'
 )
 makedepends=('git' 'cmake' 'ninja' 'qt6-shadertools')
-# caelestia-omarchy-mac: this package's old name
-provides=($_pkgname caelestia-omarchy-mac)
-conflicts=($_pkgname $_pkgname-git caelestia-omarchy-mac)
-replaces=(caelestia-omarchy-mac)
+provides=($_pkgname)
+conflicts=($_pkgname $_pkgname-git)
 if [[ -z $CAELESTIA_SRC ]]; then
     source=("$pkgname::git+$url.git")
     sha256sums=('SKIP')

@@ -8,28 +8,13 @@ description: >
   settings app, the shell's keybindings and gestures, screenshots and screen recording, and
   the Touch Bar layout. Triggers: caelestia, shell, bar, dock, launcher, notifications, wallpaper,
   scheme, colours, theme, border, gaps, lock, idle, settings app, ~/.config/caelestia/.
-<!-- omarchy -->
-  On this machine Caelestia replaces the Omarchy shell: for those topics this skill wins over
-  the omarchy skill.
-<!-- /omarchy -->
 ---
 
 # Caelestia Skill
 
-<!-- omarchy -->
-This machine runs Omarchy with **Caelestia** as its desktop shell instead of Omarchy's own
-(`omarchy-shell`). Caelestia draws the bar, dock, launcher, notifications, OSD, lock screen and
-idle handling. Everything in the omarchy skill about `omarchy-shell`, `~/.config/omarchy/shell.json`,
-the Omarchy bar, its plugins, its notifications, its OSD or its idle/lock settings does **not**
-apply here: use this skill for those. The omarchy skill still applies to everything else
-(Hyprland config files, terminals, packages, `omarchy` commands that don't go through its shell).
-<!-- /omarchy -->
-<!-- asahi -->
 This machine runs Arch Linux ARM on Apple Silicon (Asahi Linux) with Hyprland and **Caelestia** as
-its desktop shell. There is no Omarchy here: `omarchy` commands, `~/.config/omarchy/` and
-`/usr/share/omarchy/` don't exist. For Hyprland, terminals, packages and the rest of the system,
-see the asahi-desktop skill.
-<!-- /asahi -->
+its desktop shell. For Hyprland, terminals, packages and the rest of the system, see the
+asahi-desktop skill.
 
 Caelestia is a Quickshell shell, built for Apple Silicon from the checkout at
 `{{REPO}}` by `install.sh`.
@@ -74,9 +59,6 @@ Caelestia is a Quickshell shell, built for Apple Silicon from the checkout at
 ```
 
 Wallpapers are read from `~/Pictures/Wallpapers` (one folder per category).
-<!-- omarchy -->
-Omarchy's theme backgrounds are linked there as categories by `packaging/link-omarchy-wallpapers.sh`.
-<!-- /omarchy -->
 
 ## Settings App
 
@@ -122,10 +104,6 @@ caelestia wallpaper -f <image>                # Set the wallpaper
 
 Single colours of a scheme are changed on the Colours page (Settings > Wallpaper & style >
 Colours), which keeps them per scheme in `colour-overrides.json`.
-<!-- omarchy -->
-`omarchy theme set` is Omarchy's separate theme system (its own app configs and backgrounds); it
-does not change Caelestia's colour scheme.
-<!-- /omarchy -->
 
 The window border gradient follows the scheme while `bordertheme=1` in `window-style.conf`; picking
 border colours on the Window style page turns that off, picking a scheme turns it back on.
@@ -134,20 +112,9 @@ border colours on the Window style page turns that off, picking a scheme turns i
 
 `~/.config/caelestia/hypr-caelestia.lua` (from the checkout) adds the shell's layer rules,
 keybindings, gestures, window style and settings to Hyprland.
-<!-- omarchy -->
-It is loaded from a marked block at the end of `~/.config/hypr/hyprland.lua`
-(`-- >>> caelestia` ... `-- <<< caelestia`), after Omarchy's defaults and the user's `bindings.lua`,
-`input.lua` and `looknfeel.lua`. So Caelestia's bindings and window style win over those files:
-to override one of them, add the change to `hyprland.lua` **after** the caelestia block.
-
-It also swaps Omarchy's shell for Caelestia at login, starts a polkit agent, points Omarchy's
-lock keys and lid switch at Caelestia's lock, and sends the brightness and media keys to the shell.
-<!-- /omarchy -->
-<!-- asahi -->
 It is loaded near the end of `~/.config/hypr/hyprland.lua` (a symlink into the checkout), just
 before `~/.config/hypr/user.lua`. Personal Hyprland changes go in `user.lua`, which loads last and
 so wins over Caelestia's (see the asahi-desktop skill).
-<!-- /asahi -->
 
 After any Hyprland change: `hyprctl reload`, then `hyprctl configerrors` until it is clean.
 
@@ -163,19 +130,10 @@ After any Hyprland change: `hyprctl reload`, then `hyprctl configerrors` until i
 | `SUPER + M` | Minimize the window to the dock |
 | `CTRL + Q` | Close the window |
 | 3-finger horizontal swipe | Switch workspace (window style `swipe=1`) |
-<!-- omarchy -->
-| `SUPER + B` | Browser (instead of Omarchy's `SUPER + SHIFT + B`) |
-| `SUPER + CTRL + L` | Lock (Caelestia's lock screen) |
-
-`SUPER + A` runs `omarchy-agent` here (Omarchy's `SUPER + SHIFT + A` is unbound). Left Ctrl and left
-Super are swapped and Caps Lock types capitals, unless the Keyboard page says otherwise.
-<!-- /omarchy -->
-<!-- asahi -->
 
 The standalone config adds the rest (terminal, browser, files, workspaces, window keys, media
 keys); see the asahi-desktop skill. Left Ctrl and left Super are swapped unless the Keyboard page
 says otherwise.
-<!-- /asahi -->
 
 ## Idle and Lock
 

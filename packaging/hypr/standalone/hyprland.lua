@@ -1,7 +1,7 @@
 -- Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 -- SPDX-License-Identifier: GPL-3.0-only
 
--- Hyprland config for Caelestia on Arch Linux ARM / Asahi without Omarchy.
+-- Hyprland config for Caelestia on Asahi Linux (Arch Linux ARM).
 -- Installed by install-hypr.sh --standalone. Personal changes: ~/.config/hypr/user.lua,
 -- or the Window style, Displays and Keyboard pages in Caelestia's settings.
 
@@ -32,7 +32,6 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("gsettings set org.gnome.desktop.interface icon-theme Papirus-Dark")
   hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark")
   hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark")
-  hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
   hl.exec_cmd("wl-paste --watch cliphist store")
   hl.exec_cmd("caelestia shell -d")
