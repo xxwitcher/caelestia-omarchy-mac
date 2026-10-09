@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Store
-GenericName=App Store
-Comment=Install and update apps
-Icon=system-software-install
-Exec=caelestia-qs -c caelestia ipc call store open
-Categories=System;PackageManager;
-Keywords=apps;install;software;flatpak;flathub;aur;packages;updates;

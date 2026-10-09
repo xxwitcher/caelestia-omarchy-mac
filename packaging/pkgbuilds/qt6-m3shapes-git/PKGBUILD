@@ -16,7 +16,7 @@ license=('Apache-2.0')
 depends=('qt6-base' 'qt6-declarative')
 makedepends=('git' 'cmake' 'ninja' 'qt6-shadertools')
 provides=($_pkgname)
-conflicts=($_pkgname 'caelestia-shell<2.4.0')
+conflicts=($_pkgname 'taris-shell<2.4.0')
 source=("$pkgname::git+$url.git")
 sha256sums=('SKIP')
 

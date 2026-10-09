@@ -2,8 +2,8 @@
 # Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 # SPDX-License-Identifier: GPL-3.0-only
 
-# Build and install Caelestia-Silicon on Asahi Linux (Arch Linux ARM, Apple Silicon). Caelestia runs
-# on quickshell-caelestia (/opt) via `caelestia-qs`, beside any other quickshell.
+# Build and install Taris-Silicon on Asahi Linux (Arch Linux ARM, Apple Silicon). Taris runs
+# on quickshell-taris (/opt) via `taris-qs`, beside any other quickshell.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -17,7 +17,7 @@ sudo pacman -S --needed vulkan-headers cli11 ninja cmake git aubio libqalculate 
 
 # Packages ours replace: they own the same files, and --noconfirm won't swap them out
 declare -A replaces=(
-  [qmltermwidget-caelestia]=qmltermwidget # The Agent tab's terminal, patched (see its PKGBUILD)
+  [qmltermwidget-taris]=qmltermwidget # The Agent tab's terminal, patched (see its PKGBUILD)
 )
 
 # Installed already, at this PKGBUILD's version where it fixes one (where pkgver() makes it at build
@@ -37,7 +37,7 @@ build_install() {
   cd "$pkgbuilds/$pkg"
 
   # Skip rebuilding dependencies that are already installed (the shell itself is always rebuilt)
-  if [[ "$pkg" != "caelestia-silicon" ]] && installed_current "$pkg"; then
+  if [[ "$pkg" != "taris-silicon" ]] && installed_current "$pkg"; then
     echo "==> $pkg is already installed, skipping."
     return 0
   fi
@@ -65,25 +65,25 @@ build_install() {
 
 # Dependencies first: each later package needs the earlier ones installed to build
 # mise-bin installs the coding agent picked in Settings > Apps > Agent
-for pkg in libcava qt6-m3shapes-git ttf-rubik-vf python-materialyoucolor quickshell-caelestia caelestia-cli qmltermwidget-caelestia mise-bin; do
+for pkg in libcava qt6-m3shapes-git ttf-rubik-vf python-materialyoucolor quickshell-taris taris-cli qmltermwidget-taris mise-bin; do
   # Any mise will do (another package, or mise's own installer); a second one would conflict
   [[ $pkg == mise-bin ]] && command -v mise &>/dev/null && { echo "==> mise is already installed, skipping."; continue; }
   build_install "$pkg"
 done
 
 # The settings search's index of every option on the settings pages, up to date with them
-python3 -I "$here/scripts/settings-index.py" || echo "warning: the settings search index could not be updated" >&2
+python3 -I "$here/shell/scripts/settings-index.py" || echo "warning: the settings search index could not be updated" >&2
 
-# The shell itself, from this checkout
-CAELESTIA_SRC="$here" build_install caelestia-silicon
+# The shell itself, from this checkout's shell folder
+TARIS_SRC="$here/shell" build_install taris-silicon
 
-# The Agent tab's terminal colours: the shell writes them from Caelestia's scheme, but QMLTermWidget
+# The Agent tab's terminal colours: the shell writes them from Taris's scheme, but QMLTermWidget
 # only reads schemes from its own folder
-state="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia"
+state="${XDG_STATE_HOME:-$HOME/.local/state}/taris"
 mkdir -p "$state"
 for qml in /usr/lib/qt6/qml /usr/lib64/qt6/qml; do
   if [[ -d $qml/QMLTermWidget/color-schemes ]]; then
-    sudo ln -sfn "$state/agent-terminal.colorscheme" "$qml/QMLTermWidget/color-schemes/Caelestia.colorscheme"
+    sudo ln -sfn "$state/agent-terminal.colorscheme" "$qml/QMLTermWidget/color-schemes/Taris.colorscheme"
     break
   fi
 done
@@ -122,7 +122,7 @@ install_smi_driver() {
     echo "==> SMI driver installed; plug the adapter in to start it (reboot if its monitors don't come up)."
   fi
 }
-install_smi_driver || echo "warning: the SMI USB display driver could not be set up (see above); the rest of Caelestia is fine" >&2
+install_smi_driver || echo "warning: the SMI USB display driver could not be set up (see above); the rest of TarisOS is fine" >&2
 
 # Touch Bar layout with media keys and a screenshot key, as the Witcher's Tweaks set it up (MacBooks
 # running tiny-dfr; skipped without it)
@@ -134,7 +134,7 @@ install_smi_driver || echo "warning: the SMI USB display driver could not be set
 # command line takes effect at the next boot.
 install_fan_control() {
   [[ -d /sys/module/macsmc_hwmon ]] || return 0
-  sudo install -Dm644 "$packaging/90-caelestia-fans.rules" /etc/udev/rules.d/90-caelestia-fans.rules
+  sudo install -Dm644 "$packaging/90-taris-fans.rules" /etc/udev/rules.d/90-taris-fans.rules
   sudo udevadm control --reload
   sudo udevadm trigger --subsystem-match=hwmon --action=change || true
 
@@ -160,13 +160,13 @@ install_fan_control || echo "warning: fan control could not be set up (see above
 
 # The wallpapers (packaging/wallpapers), one category in the shell's wallpaper folder
 install_wallpapers() {
-  local walls="${CAELESTIA_WALLPAPERS_DIR:-$HOME/Pictures/Wallpapers}/TarisOS"
+  local walls="${TARIS_WALLPAPERS_DIR:-$HOME/Pictures/Wallpapers}/TarisOS"
   mkdir -p "$walls"
   cp -u "$packaging"/wallpapers/*.webp "$walls"/
 }
 install_wallpapers || echo "warning: the wallpapers could not be installed (see above)" >&2
 
-# Hyprland, its config and GTK/Qt theming (the polkit agent, the password prompt, is Caelestia
+# Hyprland, its config and GTK/Qt theming (the polkit agent, the password prompt, is Taris
 # itself: modules/polkit)
 sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk gnome-keyring \
   foot thunar gvfs pipewire wireplumber networkmanager bluez bluez-utils
@@ -175,7 +175,7 @@ sudo pacman -S --needed hyprland xdg-desktop-portal-hyprland xdg-desktop-portal-
 # The Witcher colour theme (packaging/defaults/witcher-theme.json: gruvbox soft dark with its colours
 # changed) among the saved themes on Settings > Colours; a fresh install starts in it
 install_witcher_theme() {
-  local overrides="${XDG_CONFIG_HOME:-$HOME/.config}/caelestia/colour-overrides.json" fresh=0
+  local overrides="${XDG_CONFIG_HOME:-$HOME/.config}/taris/colour-overrides.json" fresh=0
   [[ -f $overrides ]] || fresh=1
   mkdir -p "$(dirname "$overrides")"
   python3 -I - "$packaging/defaults/witcher-theme.json" "$overrides" "$fresh" <<'PY' || return 1
@@ -198,7 +198,7 @@ PY
   if ((fresh)); then
     local scheme flavour mode
     read -r scheme flavour mode < <(python3 -I -c 'import json, sys; t = json.load(open(sys.argv[1])); print(t["scheme"], t["flavour"], t["mode"])' "$packaging/defaults/witcher-theme.json")
-    caelestia scheme set -n "$scheme" -f "$flavour" -m "$mode" || true
+    taris scheme set -n "$scheme" -f "$flavour" -m "$mode" || true
   fi
 }
 install_witcher_theme || echo "warning: the Witcher colour theme could not be added (see above)" >&2
@@ -207,7 +207,7 @@ install_witcher_theme || echo "warning: the Witcher colour theme could not be ad
 # Chromium takes one --load-extension line (a second replaces the first), so it joins that line.
 add_webapp_extension() {
   local flags="${XDG_CONFIG_HOME:-$HOME/.config}/chromium-flags.conf"
-  local ext=/etc/xdg/quickshell/caelestia/assets/webapp-window
+  local ext=/etc/xdg/quickshell/taris/assets/webapp-window
   if ! grep -qs '^--load-extension=' "$flags"; then
     mkdir -p "$(dirname "$flags")"
     echo "--load-extension=$ext" >>"$flags"
@@ -232,7 +232,7 @@ add_chromium_google_account || echo "warning: Google sign-in could not be added 
 "$here/install-agent-skills.sh" || echo "warning: the agent skills could not be installed (see above)" >&2
 
 # File pickers of apps that ask the desktop portal for one (browsers, Electron apps, Flatpaks, GTK4
-# apps) are Caelestia's (assets/portal-filechooser.py): point the portal's FileChooser at it in the
+# apps) are Taris's (assets/portal-filechooser.py): point the portal's FileChooser at it in the
 # user's portal config, keeping the rest of what's preferred there
 portal_dir="${XDG_CONFIG_HOME:-$HOME/.config}/xdg-desktop-portal"
 portal_conf="$portal_dir/hyprland-portals.conf"
@@ -241,7 +241,7 @@ mkdir -p "$portal_dir"
 [[ -f $portal_conf ]] || printf '[preferred]\ndefault=hyprland;gtk\n' >"$portal_conf"
 grep -q '^\[preferred\]' "$portal_conf" || printf '\n[preferred]\n' >>"$portal_conf"
 sed -i '/^org\.freedesktop\.impl\.portal\.FileChooser=/d' "$portal_conf"
-sed -i '/^\[preferred\]/a org.freedesktop.impl.portal.FileChooser=caelestia' "$portal_conf"
+sed -i '/^\[preferred\]/a org.freedesktop.impl.portal.FileChooser=taris' "$portal_conf"
 # The portal reads its config at startup; the GTK one (still the fallback, and its other dialogs)
 # its theme (adw-gtk3-dark, installed above)
 for unit in xdg-desktop-portal-gtk.service xdg-desktop-portal.service; do
@@ -254,18 +254,18 @@ done
 # Start the shell just installed, only inside the Hyprland session it's for (not over SSH or from a
 # TTY)
 if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
-  echo "Done. Start Caelestia from your Hyprland session with: caelestia shell -d"
+  echo "Done. Start the shell from your Hyprland session with: taris shell -d"
 else
-  # Caelestia is the polkit agent now: polkit-gnome (started by older versions of this setup) holds
+  # Taris is the polkit agent now: polkit-gnome (started by older versions of this setup) holds
   # the agent's place while it runs
   pkill -f polkit-gnome-authentication-agent-1 2>/dev/null || true
-  caelestia shell -k &>/dev/null || true
-  caelestia shell -d
+  taris shell -k &>/dev/null || true
+  taris shell -d
   # A config that fails to load leaves the process running with nothing on screen, and says so
   # only in its log: wait for the log to say which (up to 15 s)
   status=""
   for _ in $(seq 30); do
-    log=$(timeout 3 caelestia shell -l 2>/dev/null || true)
+    log=$(timeout 3 taris shell -l 2>/dev/null || true)
     if grep -q 'Failed to load configuration' <<<"$log"; then
       status=failed
       break
@@ -276,12 +276,12 @@ else
     sleep 0.5
   done
   case $status in
-  loaded) echo "Done. Caelestia is running." ;;
+  loaded) echo "Done. TarisOS is running." ;;
   failed)
-    echo "error: Caelestia was installed but its config failed to load:" >&2
+    echo "error: the shell was installed but its config failed to load:" >&2
     grep -E 'ERROR' <<<"$log" | sed 's/\x1b\[[0-9;]*m//g' >&2
     exit 1
     ;;
-  *) echo "warning: Caelestia was started, but its log doesn't say yet whether it loaded (caelestia shell -l)" >&2 ;;
+  *) echo "warning: the shell was started, but its log doesn't say yet whether it loaded (taris shell -l)" >&2 ;;
   esac
 fi

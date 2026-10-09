@@ -9,8 +9,8 @@ set -euo pipefail
 
 repo="$(cd "$(dirname "$0")" && pwd)"
 here="$repo/packaging"
-data="${XDG_DATA_HOME:-$HOME/.local/share}/caelestia/agent-skills"
-skills=(caelestia asahi-desktop diagnose-crash)
+data="${XDG_DATA_HOME:-$HOME/.local/share}/taris/agent-skills"
+skills=(taris asahi-desktop diagnose-crash)
 
 rm -rf "$data"
 mkdir -p "$data"

@@ -8,8 +8,8 @@ Silicon support.
 Be strict here. A crash inside a third-party application — a file manager, a browser, a
 GNOME or Qt library — is almost always an upstream bug in **that** project.
 
-- **This setup** (https://github.com/xxwitcher/caelestia-silicon): the Caelestia
-  shell built from `{{REPO}}`, its `caelestia-qs` Quickshell build, the install scripts,
+- **This setup** (https://github.com/xxwitcher/caelestia-silicon): the Taris
+  shell built from `{{REPO}}`, its `taris-qs` Quickshell build, the install scripts,
   the Hyprland config and the packages it builds in `packaging/pkgbuilds/`.
 - **Asahi Linux** (https://github.com/AsahiLinux): the kernel, GPU driver and other Apple
   Silicon hardware support.
@@ -60,7 +60,7 @@ gh issue create --repo <owner/repo> --title "..." --body "..."
 ```
 
 Include what happened, what was expected, steps to reproduce, and system details:
-`uname -r`, `hyprctl version`, `pacman -Q hyprland caelestia-silicon quickshell-caelestia caelestia-cli`,
+`uname -r`, `hyprctl version`, `pacman -Q hyprland taris-silicon quickshell-taris taris-cli`,
 the Mac model, and the relevant `coredumpctl info` output. `gh` cannot attach media: save a
 screenshot and give the user the path to drag into the web form.
 

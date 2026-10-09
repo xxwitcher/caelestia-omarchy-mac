@@ -95,6 +95,6 @@ above, which is a copy of the crashed process's memory.
 ## If it is a bug in this setup
 
 Most application crashes are upstream bugs in those applications. In the minority
-of cases where the cause really does sit in this machine's setup (Caelestia, its
+of cases where the cause really does sit in this machine's setup (Taris, its
 install scripts, the Hyprland config it ships) or in Apple Silicon support, read
 [`reporting.md`](reporting.md) before offering to file anything.

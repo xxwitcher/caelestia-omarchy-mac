@@ -1,5 +1,5 @@
 .direnv
-/.qmlls.ini
+/shell/.qmlls.ini
 build/
 .cache/
 logs
@@ -9,7 +9,7 @@ packaging/pkgbuilds/*/pkg/
 packaging/pkgbuilds/*/*.pkg.tar.*
 packaging/pkgbuilds/*/*.tar.gz
 packaging/pkgbuilds/*/build.log
-packaging/pkgbuilds/quickshell-caelestia/quickshell/
+packaging/pkgbuilds/quickshell-taris/quickshell/
 packaging/pkgbuilds/qt6-m3shapes-git/qt6-m3shapes-git/
 packaging/pkgbuilds/ttf-rubik-vf/*.ttf
 packaging/pkgbuilds/ttf-rubik-vf/*.txt

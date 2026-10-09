@@ -4,7 +4,7 @@
 
 # Builds the hyprbars plugin (hyprwm/hyprland-plugins) for the running
 # Hyprland, from the plugins commit hyprpm.toml pins for it, into
-# ~/.local/share/caelestia/hyprbars/hyprbars.so. Hyprland only loads a
+# ~/.local/share/taris/hyprbars/hyprbars.so. Hyprland only loads a
 # plugin built from its own headers, so the result is checked against the
 # running version before it's put in place.
 #
@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-dest="$HOME/.local/share/caelestia/hyprbars"
+dest="$HOME/.local/share/taris/hyprbars"
 stamp="$dest/built-for"
 plugins_repo="https://raw.githubusercontent.com/hyprwm/hyprland-plugins"
 

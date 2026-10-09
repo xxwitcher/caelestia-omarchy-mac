@@ -1,9 +1,9 @@
 -- Copyright (C) 2026 George Dobreff ("Witcher") and contributors
 -- SPDX-License-Identifier: GPL-3.0-only
 
--- Hyprland config for Caelestia on Asahi Linux (Arch Linux ARM).
+-- Hyprland config for Taris on Asahi Linux (Arch Linux ARM).
 -- Installed by install-hypr.sh --standalone. Personal changes: ~/.config/hypr/user.lua,
--- or the Window style, Displays and Keyboard pages in Caelestia's settings.
+-- or the Window style, Displays and Keyboard pages in Taris's settings.
 
 local home = os.getenv("HOME")
 local terminal = os.getenv("TERMINAL") or "foot"
@@ -34,12 +34,12 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark")
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
   hl.exec_cmd("wl-paste --watch cliphist store")
-  hl.exec_cmd("caelestia shell -d")
+  hl.exec_cmd("taris shell -d")
   -- Apps set to Open at Login (~/.config/autostart; the dock's menu sets them)
   hl.exec_cmd("systemctl --user start xdg-desktop-autostart.target")
 end)
 
--- Look and feel (border size and gaps come from Caelestia's Window style page)
+-- Look and feel (border size and gaps come from Taris's Window style page)
 hl.config({
   general = { layout = "dwindle" },
   decoration = { rounding = 12, blur = { enabled = true, size = 6, passes = 2 } },
@@ -57,18 +57,18 @@ hl.config({
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd(terminal))
 hl.bind("SUPER + B", hl.dsp.exec_cmd(browser))
 hl.bind("SUPER + E", hl.dsp.exec_cmd(files))
-hl.bind("SUPER + SPACE", hl.dsp.global("caelestia:launcher"))
-hl.bind("SUPER + TAB", hl.dsp.global("caelestia:overview"))
-hl.bind("SUPER + ESCAPE", hl.dsp.global("caelestia:session"))
-hl.bind("SUPER + L", hl.dsp.global("caelestia:lock"))
-hl.bind("SUPER + V", hl.dsp.exec_cmd("caelestia clipboard"))
-hl.bind("PRINT", hl.dsp.global("caelestia:screenshot"))
-hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("caelestia record -r"))
+hl.bind("SUPER + SPACE", hl.dsp.global("taris:launcher"))
+hl.bind("SUPER + TAB", hl.dsp.global("taris:overview"))
+hl.bind("SUPER + ESCAPE", hl.dsp.global("taris:session"))
+hl.bind("SUPER + L", hl.dsp.global("taris:lock"))
+hl.bind("SUPER + V", hl.dsp.exec_cmd("taris clipboard"))
+hl.bind("PRINT", hl.dsp.global("taris:screenshot"))
+hl.bind("SUPER + SHIFT + R", hl.dsp.exec_cmd("taris record -r"))
 
 -- Windows
 hl.bind("SUPER + W", hl.dsp.window.close())
 hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
--- (SUPER + M minimizes, from hypr-caelestia.lua)
+-- (SUPER + M minimizes, from hypr-taris.lua)
 hl.bind("SUPER + SHIFT + M", hl.dsp.window.fullscreen({ mode = "maximized" }))
 hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind("SUPER + J", hl.dsp.layout("togglesplit"))
@@ -86,20 +86,20 @@ end
 hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
 
--- Media and hardware keys (Caelestia shows the OSD)
+-- Media and hardware keys (Taris shows the OSD)
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
-hl.bind("XF86MonBrightnessUp", hl.dsp.global("caelestia:brightnessUp"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.global("caelestia:brightnessDown"), { locked = true, repeating = true })
-hl.bind("XF86AudioPlay", hl.dsp.global("caelestia:mediaToggle"), { locked = true })
-hl.bind("XF86AudioNext", hl.dsp.global("caelestia:mediaNext"), { locked = true })
-hl.bind("XF86AudioPrev", hl.dsp.global("caelestia:mediaPrev"), { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.global("caelestia:mediaToggle"), { locked = true })
-hl.bind("SHIFT + XF86AudioPlay", hl.dsp.global("caelestia:mediaSwitch"), { locked = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.global("taris:brightnessUp"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.global("taris:brightnessDown"), { locked = true, repeating = true })
+hl.bind("XF86AudioPlay", hl.dsp.global("taris:mediaToggle"), { locked = true })
+hl.bind("XF86AudioNext", hl.dsp.global("taris:mediaNext"), { locked = true })
+hl.bind("XF86AudioPrev", hl.dsp.global("taris:mediaPrev"), { locked = true })
+hl.bind("XF86AudioPause", hl.dsp.global("taris:mediaToggle"), { locked = true })
+hl.bind("SHIFT + XF86AudioPlay", hl.dsp.global("taris:mediaSwitch"), { locked = true })
 
--- Caelestia integration (layer rules, gestures, window style, CTRL + Q, SUPER + M and SUPER + A,
+-- Taris integration (layer rules, gestures, window style, CTRL + Q, SUPER + M and SUPER + A,
 -- settings), then your own changes
-pcall(dofile, home .. "/.config/caelestia/hypr-caelestia.lua")
+pcall(dofile, home .. "/.config/taris/hypr-taris.lua")
 pcall(dofile, home .. "/.config/hypr/user.lua")
